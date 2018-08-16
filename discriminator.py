@@ -36,8 +36,8 @@ def compile_wasserstein_critic(model):
         metrics=["accuracy"])
 
 def compile_demo(model):
-    model.compile(loss='sparse_categorical_crossentropy',
-        optimizer=keras.optimizers.RMSprop(lr=0.00005, clipvalue=0.01),
+    model.compile(loss=keras.losses.categorical_crossentropy,
+        optimizer=keras.optimizers.RMSprop(lr=0.00005),
         metrics=["accuracy"])
 
 # Example: mnist data set (digit recognition)
@@ -46,8 +46,8 @@ if __name__ == "__main__":
     import sys
 
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
-    x_train = (x_train.reshape(x_train.shape[0], 28, 28, 1).astype('float32')  - 127.5) / 127.5
-    x_test = (x_test.reshape(x_test.shape[0], 28, 28, 1).astype('float32')  - 127.5) / 127.5
+    x_train = (x_train.reshape(x_train.shape[0], 28, 28, 1).astype('float32')) / 255
+    x_test = (x_test.reshape(x_test.shape[0], 28, 28, 1).astype('float32')) / 255
     y_test = keras.utils.to_categorical(y_test, num_classes=10)
     y_train = keras.utils.to_categorical(y_train, num_classes=10)
     model = make_discriminator((28, 28, 1))
