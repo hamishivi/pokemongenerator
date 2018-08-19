@@ -2,7 +2,7 @@ from keras.preprocessing.image import ImageDataGenerator
 import os
 
 
-def prepare_images(directory):
+def prepare_images(directory, batch_size, target_size):
     train_datagen = ImageDataGenerator(
         rescale=1./255, # is this needed?
         zoom_range=0.2, # = crop
@@ -14,8 +14,8 @@ def prepare_images(directory):
 
     train_generator = train_datagen.flow_from_directory(
         directory,
-        target_size=(150, 150), # obviously need to tinker with here
-        batch_size=64,
+        target_size=target_size, # obviously need to tinker with here
+        batch_size=batch_size,
         class_mode='binary', # idk what this is
         save_to_dir='transform')
 
@@ -29,7 +29,7 @@ if __name__ == "__main__":
     for file in os.listdir('transform'):
         os.remove('transform/' + str(file))
     # create generate
-    datagen = prepare_images("data")
+    datagen = prepare_images("data", 64, (150, 150))
     # iterate through a bit to generate them
     count = 0
     for item in datagen:

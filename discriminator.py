@@ -1,7 +1,7 @@
 import keras
 from keras.models import Sequential, Model
 import keras.backend as K
-from keras.layers import Conv2D, Dense, Flatten, BatchNormalization
+from keras.layers import Conv2D, Dense, Flatten, BatchNormalization, Input
 from keras.layers.advanced_activations import LeakyReLU
 
 
@@ -13,7 +13,7 @@ def EM_loss(y_true, y_pred):
 def make_discriminator(input_shape):
     model = Sequential()
 
-    model.add(Conv2D(32, kernel_size=(5, 5), input_shape=input_shape, padding='same'))
+    model.add(Conv2D(32, kernel_size=(5, 5), input_shape=input_shape, data_format="channels_last", padding='same'))
     model.add(LeakyReLU())
 
     model.add(Conv2D(64, kernel_size=(5, 5)))
@@ -28,7 +28,11 @@ def make_discriminator(input_shape):
         model.add(Dense(10, activation='softmax'))
     else:
         model.add(Dense(1, activation='linear'))
-    return model
+
+    img = Input(shape=input_shape)
+    validity = model(img)
+
+    return Model(img, validity)
 
 def compile_wasserstein_critic(model):
     model.compile(loss=EM_loss,
@@ -43,7 +47,6 @@ def compile_demo(model):
 # Example: mnist data set (digit recognition)
 if __name__ == "__main__":
     from keras.datasets import mnist
-    import sys
 
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
     x_train = (x_train.reshape(x_train.shape[0], 28, 28, 1).astype('float32')) / 255
@@ -53,11 +56,16 @@ if __name__ == "__main__":
     model = make_discriminator((28, 28, 1))
     # no EM as that needs to be paired with the generator
     compile_demo(model)
+
+    tbCallBack = keras.callbacks.TensorBoard(log_dir='./log', histogram_freq=0, write_graph=True, write_images=True)
+
+
     model.fit(x_train, y_train,
           batch_size=128,
           epochs=6,
           verbose=1,
-          validation_data=(x_test, y_test))
+          validation_data=(x_test, y_test),
+          callbacks=[tbCallBack])
     score = model.evaluate(x_test, y_test, verbose=1)
     print('Test loss:', score[0])
     print('Test accuracy:', score[1])
