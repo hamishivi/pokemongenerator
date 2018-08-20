@@ -34,6 +34,7 @@ def make_generator():
     # the tanh function should be used for the output of the generator to ensure its output
     # also lies in this range.
     model.add(Conv2DTranspose(3, kernel_size=(5, 5), strides=[2,2], padding='same', data_format='channels_last'))
+    model.add(Activation("tanh"))
 
     noise = Input(shape=(100,))
     img = model(noise)

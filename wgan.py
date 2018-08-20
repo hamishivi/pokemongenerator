@@ -54,12 +54,15 @@ for epoch in range(EPOCHS):
         if (imgs.shape[0] != batch_size):
             datagen = prepare_images("data", batch_size, (128, 128))
             imgs = next(datagen)[0]
+
+        # rescale -1 to 1
+        imgs = (imgs.astype(np.float32) - 127.5) / 127.5
         # get fake images from generator
         # Sample noise as generator input
         noise = np.random.normal(0, 1, (batch_size, 100))
         # Generate a batch of new images
         fake_imgs = generator.predict(noise, batch_size=batch_size)
-        print(".", end="")
+        print(".", end="", flush=True)
         # train!
         d_loss_real = discriminator.train_on_batch(imgs, valid)
         d_loss_fake = discriminator.train_on_batch(fake_imgs, fake)
