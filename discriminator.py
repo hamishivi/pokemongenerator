@@ -36,7 +36,7 @@ def make_discriminator(input_shape):
 
 def compile_wasserstein_critic(model):
     model.compile(loss=EM_loss,
-        optimizer=keras.optimizers.RMSprop(lr=0.00005, clipvalue=0.01),
+        optimizer=keras.optimizers.RMSprop(lr=0.00005),
         metrics=["accuracy"])
 
 def compile_demo(model):
