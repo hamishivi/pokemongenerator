@@ -2,7 +2,7 @@ from keras.preprocessing.image import ImageDataGenerator
 import os
 
 
-def prepare_images(directory, batch_size, target_size):
+def prepare_images(directory, batch_size, target_size, shuffle=True, class_mode="categorical"):
     train_datagen = ImageDataGenerator(
         rescale=1./255, # is this needed?
         zoom_range=0.2, # = crop
@@ -16,10 +16,9 @@ def prepare_images(directory, batch_size, target_size):
         directory,
         target_size=target_size, # obviously need to tinker with here
         batch_size=batch_size,
-        class_mode='binary', # idk what this is
+        class_mode=class_mode,
+        shuffle=shuffle,
         save_to_dir='transform')
-
-    # TODO: validation sets? Shouldn't be too hard, just might require some extra shuffling
     
     return train_generator
 

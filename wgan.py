@@ -88,7 +88,7 @@ for epoch in range(EPOCHS):
         cnt = 0
         for i in axs:
             for p in i:
-                p.imshow(gen_imgs[0, :,:,0], cmap='gray')
+                p.imshow(gen_imgs[0, :,:,:])
                 p.axis("off")
                 cnt += 1
         fig.savefig("images/pokemon_" + str(epoch) + ".png")

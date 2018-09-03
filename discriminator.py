@@ -10,7 +10,7 @@ from keras.layers.advanced_activations import LeakyReLU
 def EM_loss(y_true, y_pred):
     return K.mean(y_pred * y_true)
 
-def make_discriminator(input_shape):
+def make_discriminator(input_shape, generator_demo=False):
     model = Sequential()
 
     model.add(Conv2D(32, kernel_size=(5, 5), input_shape=input_shape, data_format="channels_last", padding='same'))
@@ -26,6 +26,8 @@ def make_discriminator(input_shape):
 
     if __name__ == "__main__":
         model.add(Dense(10, activation='softmax'))
+    elif generator_demo:
+        model.add(Dense(100, activation='softmax'))
     else:
         model.add(Dense(1, activation='linear'))
 
