@@ -1,0 +1,5 @@
+parameters: a=2, b=6, c=10
+[test segmentation; ground-truth; precision; recall; f-measure]
+C:\Users\lihui\Dropbox\Li Hui\Semantic segmentation benchmark\Benchmark dataset100\test\23084.png;C:\Users\lihui\Dropbox\Li Hui\Semantic segmentation benchmark\Benchmark dataset100\ground-truth\23084.png;0.504057;0.47642;0.489849
+
+Time consumed:10.689s
