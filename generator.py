@@ -5,7 +5,7 @@ from keras.layers import Activation, Conv2D, Conv2DTranspose, Dense, Flatten, Ba
 from keras.layers.advanced_activations import LeakyReLU
 from discriminator import make_discriminator
 from data_prep import prepare_images
-from PIL import Image
+from scipy.misc import imsave
 
 def make_generator(input_shape=(100,)):
     model = Sequential()
@@ -81,10 +81,9 @@ if __name__ == '__main__':
 
     train_datagen = zip(image_datagen, mask_datagen)
 
-    deconv_layers.fit_generator(train_datagen, steps_per_epoch=2000, epochs=5)
+    deconv_layers.fit_generator(train_datagen, steps_per_epoch=1000, epochs=1)
 
     print("Showing example segmentation...")
     results = deconv_layers.predict_generator(test_datagen,30,verbose=1)
     for idx, image in enumerate(results):
-        im = Image.fromarray(image)
-        im.save("result_." + idx + "png")
+        imsave("result_." + idx + "png", image)
