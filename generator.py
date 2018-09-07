@@ -73,6 +73,7 @@ if __name__ == '__main__':
         optimizer=keras.optimizers.Adam(lr=1e-5),
         metrics=["accuracy"])
     batch_size = 64
+    
 
     image_datagen = prepare_images("Semantic_dataset100/image", batch_size, (128, 128), shuffle=False, class_mode=None)
     mask_datagen = prepare_images("Semantic_dataset100/ground-truth", batch_size, (128, 128), shuffle=False, class_mode=None)
@@ -86,4 +87,4 @@ if __name__ == '__main__':
     print("Showing example segmentation...")
     results = deconv_layers.predict_generator(test_datagen,30,verbose=1)
     for idx, image in enumerate(results):
-        imsave("result_." + idx + "png", image)
+        imsave("result_." + str(idx) + "png", image)

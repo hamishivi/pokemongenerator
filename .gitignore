@@ -108,3 +108,5 @@ data/
 transform/
 images/
 log/
+segmentation_dataset/
+testwgan.py
