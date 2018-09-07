@@ -1,11 +1,12 @@
+import glob
 import keras
 from keras.models import Sequential, Model
 import keras.backend as K
+from keras.preprocessing.image import ImageDataGenerator
 from keras.layers import Activation, Conv2D, Conv2DTranspose, Dense, Flatten, BatchNormalization, Reshape, Input
 from keras.layers.advanced_activations import LeakyReLU
 from discriminator import make_discriminator
 from data_prep import prepare_images
-from scipy.misc import imsave
 
 def make_generator(input_shape=(100,)):
     model = Sequential()
@@ -53,6 +54,40 @@ def make_generator(input_shape=(100,)):
 
     return Model(noise, img)
 
+def get_demo_data():
+    # we create two instances with the same arguments
+    data_gen_args = dict(rotation_range=90.,
+                         width_shift_range=0.1,
+                         height_shift_range=0.1,
+                         zoom_range=0.2)
+    image_datagen = ImageDataGenerator(**data_gen_args)
+    mask_datagen = ImageDataGenerator(**data_gen_args)
+    
+    # Provide the same seed and keyword arguments to the fit and flow methods
+    seed = 1
+    
+    image_generator = image_datagen.flow_from_directory(
+        'segmentation_dataset/images/raws',
+        target_size=(128,128),
+        class_mode=None,
+        seed=seed)
+    
+    mask_generator = mask_datagen.flow_from_directory(
+        'segmentation_dataset/images/masks',
+        target_size=(128,128),
+        class_mode=None,
+        seed=seed)
+    
+    # combine generators into one which yields image and masks
+    return zip(image_generator, mask_generator)
+
+def get_demo_test():
+    test_datagen = ImageDataGenerator()
+    image_generator = test_datagen.flow_from_directory(
+        'segmentation_dataset/images/test',
+        class_mode=None)
+    return image_generator
+
 def compile_demo(deconv, conv):
     in_conv = Input(shape=(128,128,3))
     out_conv = conv(in_conv)
@@ -72,19 +107,11 @@ if __name__ == '__main__':
     deconv_layers.compile(loss=keras.losses.categorical_crossentropy,
         optimizer=keras.optimizers.Adam(lr=1e-5),
         metrics=["accuracy"])
-    batch_size = 64
-    
-
-    image_datagen = prepare_images("Semantic_dataset100/image", batch_size, (128, 128), shuffle=False, class_mode=None)
-    mask_datagen = prepare_images("Semantic_dataset100/ground-truth", batch_size, (128, 128), shuffle=False, class_mode=None)
-
-    test_datagen = prepare_images("Semantic_dataset100/test", batch_size, (128, 128))
-
-    train_datagen = zip(image_datagen, mask_datagen)
-
+    train_datagen = get_demo_data()
     deconv_layers.fit_generator(train_datagen, steps_per_epoch=1000, epochs=1)
 
+    test_datagen = get_demo_test()
     print("Showing example segmentation...")
-    results = deconv_layers.predict_generator(test_datagen,30,verbose=1)
+    results = deconv_layers.predict_generator(test_datagen,verbose=1)
     for idx, image in enumerate(results):
         imsave("result_." + str(idx) + "png", image)
