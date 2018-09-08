@@ -8,7 +8,7 @@ from keras.layers.advanced_activations import LeakyReLU
 # we feed +1 as label for real and -1 for fake images
 # in the D, and opposite in the G.
 def EM_loss(y_true, y_pred):
-    return K.mean(y_pred * y_true)
+    return K.mean(y_true * y_pred)
 
 def make_discriminator(input_shape, generator_demo=False):
     model = Sequential()
@@ -34,7 +34,7 @@ def make_discriminator(input_shape, generator_demo=False):
     img = Input(shape=input_shape)
     validity = model(img)
 
-    return Model(img, validity)
+    return Model(img, validity, name="discriminator")
 
 def compile_wasserstein_critic(model):
     model.compile(loss=EM_loss,
