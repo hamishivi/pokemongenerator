@@ -59,7 +59,7 @@ for epoch in range(EPOCHS):
         imgs = (imgs.astype(np.float32) - 127.5) / 127.5
         # get fake images from generator
         # Sample noise as generator input
-        noise = np.random.normal(0, 1, (batch_size, 100))
+        noise = np.random.uniform(-1, 1, (batch_size, 100)).astype('float32')
         # Generate a batch of new images
         fake_imgs = generator.predict(noise, batch_size=batch_size)
         print(".", end="", flush=True)
@@ -70,7 +70,7 @@ for epoch in range(EPOCHS):
         # clip weights
         for layer in discriminator.layers:
             weights = layer.get_weights()
-            weights = [np.clip(w, -0.1, 0.1) for w in weights]
+            weights = [np.clip(w, -0.01, 0.01) for w in weights]
             layer.set_weights(weights)
         
     # train generator
