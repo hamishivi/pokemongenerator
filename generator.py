@@ -7,6 +7,7 @@ from keras.layers import Activation, Conv2D, Conv2DTranspose, Dense, Flatten, Ba
 from keras.layers.advanced_activations import LeakyReLU
 from discriminator import make_discriminator
 from data_prep import prepare_images
+from scipy.misc import imsave, imread
 
 def make_generator(input_shape=(100,)):
     model = Sequential()
@@ -112,6 +113,10 @@ if __name__ == '__main__':
 
     test_datagen = get_demo_test()
     print("Showing example segmentation...")
-    results = deconv_layers.predict_generator(test_datagen,verbose=1)
+    image = imread('segmentation_dataset/images/test/abbey/ADE_val_00000001.jpg')
+    image = np.expand_dims(image, axis=0)
+    print(image.shape)
+    results = deconv_layers.predict(image, test_datagen, verbose=1)
+    print(results.shape)
     for idx, image in enumerate(results):
         imsave("result_." + str(idx) + "png", image)
