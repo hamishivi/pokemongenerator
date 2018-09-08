@@ -47,14 +47,19 @@ fake = np.ones((batch_size, 1))
 
 for epoch in range(EPOCHS):
     # train discriminator
+    discriminator.trainable = True
     for _ in range(N_CRITIC):
+        # clip weights
+        for layer in discriminator.layers:
+            weights = layer.get_weights()
+            weights = [np.clip(w, -0.01, 0.01) for w in weights]
+            layer.set_weights(weights)
         # get real images
         imgs = next(datagen)[0]
         # if we run out of data, randomly generate more.
         if (imgs.shape[0] != batch_size):
             datagen = prepare_images("data", batch_size, (128, 128))
             imgs = next(datagen)[0]
-
         # rescale -1 to 1
         imgs = (imgs.astype(np.float32) - 127.5) / 127.5
         # get fake images from generator
@@ -66,17 +71,13 @@ for epoch in range(EPOCHS):
         # train!
         d_loss_real = discriminator.train_on_batch(imgs, valid)
         d_loss_fake = discriminator.train_on_batch(fake_imgs, fake)
-        d_loss = 0.5 * np.add(d_loss_fake, d_loss_real)
-        # clip weights
-        for layer in discriminator.layers:
-            weights = layer.get_weights()
-            weights = [np.clip(w, -0.01, 0.01) for w in weights]
-            layer.set_weights(weights)
+        d_loss = np.mean(d_loss_real, d_loss_fake)
         
+    discriminator.trainable = False
     # train generator
     g_loss = combined.train_on_batch(noise, valid)
 
-    print ("\n%d [D loss: %f] [G loss: %f]" % (epoch, 1 - d_loss[0], 1 - g_loss[0]))
+    print ("\n%d [D loss: %f (real: %f, fake: %f)] [G loss: %f]" % (epoch, 1 - d_loss[0], d_loss_real, d_loss_fake, 1 - g_loss[0]))
 
     if epoch % sample_interval == 0:
         r, c = 5, 5
