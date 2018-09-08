@@ -35,8 +35,8 @@ gen_in = Input(shape=(100,))
 generated_img = generator(gen_in)
 is_valid = discriminator(generated_img)
 
-discriminator.trainable = False
 combined = Model(gen_in, is_valid)
+combined.get_layer("discriminator").trainable = False
 combined.compile(loss=EM_loss, optimizer=keras.optimizers.RMSprop(lr=0.00005), metrics=['accuracy'])
 
 print("Models built! Starting to train...")
@@ -48,6 +48,11 @@ fake = np.ones((batch_size, 1))
 for epoch in range(EPOCHS):
     # train discriminator
     discriminator.trainable = True
+    for l in discriminator.layers: l.trainable = True
+    if epoch < 25:
+        N_CRITIC = 100
+    else:
+        N_CRITIC = 5
     for _ in range(N_CRITIC):
         # clip weights
         for layer in discriminator.layers:
@@ -71,13 +76,14 @@ for epoch in range(EPOCHS):
         # train!
         d_loss_real = discriminator.train_on_batch(imgs, valid)
         d_loss_fake = discriminator.train_on_batch(fake_imgs, fake)
-        d_loss = np.mean(d_loss_real, d_loss_fake)
-        
-    discriminator.trainable = False
-    # train generator
-    g_loss = combined.train_on_batch(noise, valid)
+        d_loss = np.mean(d_loss_real + d_loss_fake)
+            # train generator
 
-    print ("\n%d [D loss: %f (real: %f, fake: %f)] [G loss: %f]" % (epoch, 1 - d_loss[0], d_loss_real, d_loss_fake, 1 - g_loss[0]))
+    discriminator.trainable = False
+    for l in discriminator.layers: l.trainable = False
+    g_loss = np.mean(combined.train_on_batch(noise, valid))
+
+    print ("\n%d [D loss: %f (real: %f, fake: %f)] [G loss: %f]" % (epoch, 1 - d_loss, d_loss_real, d_loss_fake, 1 - g_loss))
 
     if epoch % sample_interval == 0:
         r, c = 5, 5
