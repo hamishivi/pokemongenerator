@@ -83,7 +83,7 @@ for epoch in range(EPOCHS):
     for l in discriminator.layers: l.trainable = False
     g_loss = np.mean(combined.train_on_batch(noise, valid))
 
-    print ("\n%d [D loss: %f (real: %f, fake: %f)] [G loss: %f]" % (epoch, 1 - d_loss, d_loss_real, d_loss_fake, 1 - g_loss))
+    print ("\n%d [D loss: %f (real: %f, fake: %f)] [G loss: %f]" % (epoch, 1 - d_loss, d_loss_real[0], d_loss_fake[0], 1 - g_loss))
 
     if epoch % sample_interval == 0:
         r, c = 5, 5
