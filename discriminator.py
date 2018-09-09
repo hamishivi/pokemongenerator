@@ -1,7 +1,7 @@
 import keras
 from keras.models import Sequential, Model
 import keras.backend as K
-from keras.layers import Conv2D, Dense, Flatten, BatchNormalization, Input
+from keras.layers import ZeroPadding2D, Dropout, Conv2D, Dense, Flatten, BatchNormalization, Input
 from keras.layers.advanced_activations import LeakyReLU
 
 
@@ -10,24 +10,33 @@ from keras.layers.advanced_activations import LeakyReLU
 def EM_loss(y_true, y_pred):
     return K.mean(y_true * y_pred)
 
-def make_discriminator(input_shape, generator_demo=False):
+def make_discriminator(input_shape):
     model = Sequential()
 
-    model.add(Conv2D(32, kernel_size=(5, 5), input_shape=input_shape, data_format="channels_last", padding='same'))
-    model.add(LeakyReLU())
+    model.add(Conv2D(16, kernel_size=3, strides=2, input_shape=input_shape, padding="same"))
+    model.add(LeakyReLU(alpha=0.2))
+    model.add(Dropout(0.25))
 
-    model.add(Conv2D(64, kernel_size=(5, 5)))
-    model.add(LeakyReLU())
+    model.add(Conv2D(32, kernel_size=3, strides=2, padding="same"))
+    model.add(ZeroPadding2D(padding=((0,1),(0,1))))
+    model.add(BatchNormalization(momentum=0.8))
+    model.add(LeakyReLU(alpha=0.2))
+    model.add(Dropout(0.25))
 
-    model.add(Conv2D(128, kernel_size=(5, 5)))
-    model.add(LeakyReLU())
+    model.add(Conv2D(64, kernel_size=3, strides=2, padding="same"))
+    model.add(BatchNormalization(momentum=0.8))
+    model.add(LeakyReLU(alpha=0.2))
+    model.add(Dropout(0.25))
+
+    model.add(Conv2D(128, kernel_size=3, strides=1, padding="same"))
+    model.add(BatchNormalization(momentum=0.8))
+    model.add(LeakyReLU(alpha=0.2))
+    model.add(Dropout(0.25))
 
     model.add(Flatten())
 
     if __name__ == "__main__":
         model.add(Dense(10, activation='softmax'))
-    elif generator_demo:
-        model.add(Dense(100, activation='softmax'))
     else:
         model.add(Dense(1, activation='linear'))
 

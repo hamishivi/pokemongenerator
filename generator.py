@@ -3,7 +3,7 @@ import keras
 from keras.models import Sequential, Model
 import keras.backend as K
 from keras.preprocessing.image import ImageDataGenerator
-from keras.layers import Activation, Conv2D, Conv2DTranspose, Dense, Flatten, BatchNormalization, Reshape, Input, MaxPooling2D
+from keras.layers import UpSampling2D, Activation, Conv2D, Conv2DTranspose, Dense, Flatten, BatchNormalization, Reshape, Input, MaxPooling2D
 
 from keras.layers.advanced_activations import LeakyReLU
 from discriminator import make_discriminator
@@ -19,7 +19,7 @@ def make_generator(input_shape=(100,)):
 
         model.add(Conv2D(64, kernel_size=(5, 5), strides=[2,2], input_shape=input_shape, data_format="channels_last", padding='same'))
         model.add(LeakyReLU())
-        model.add(MaxPooling2D( MaxPooling2D((2, 2), padding='same')))
+        model.add(MaxPooling2D(padding='same')))
 
         model.add(Conv2D(128, kernel_size=(5, 5), strides=[2,2], input_shape=input_shape, data_format="channels_last", padding='same'))
         model.add(LeakyReLU())
@@ -29,36 +29,34 @@ def make_generator(input_shape=(100,)):
         model.add(Dense(4 * 4 * 512, input_dim=100))
     model.add(LeakyReLU())
 
-    model.summary()
-
     model.add(Reshape((4, 4, 512)))
+    model.add(UpSampling2D())
+
+    model.add(Conv2D(256, kernel_size=4, padding='same'))
     model.add(BatchNormalization())
     model.add(LeakyReLU())
+    model.add(UpSampling2D())
 
-    model.add(Conv2DTranspose(256, kernel_size=(5, 5), strides=[2, 2], padding='same'))
+    model.add(Conv2D(128, kernel_size=4, padding='same'))
     model.add(BatchNormalization())
     model.add(LeakyReLU())
+    model.add(UpSampling2D())
 
-    model.add(Conv2DTranspose(128, kernel_size=(5, 5), strides=[2, 2], padding='same'))
+    model.add(Conv2D(64, kernel_size=4, padding='same'))
     model.add(BatchNormalization())
     model.add(LeakyReLU())
+    model.add(UpSampling2D())
 
-    model.add(Conv2DTranspose(64, kernel_size=(5, 5), strides=[2, 2], padding='same'))
+    model.add(Conv2D(32, kernel_size=4, padding='same'))
     model.add(BatchNormalization())
     model.add(LeakyReLU())
+    model.add(UpSampling2D())
 
-    model.add(Conv2DTranspose(32, kernel_size=(5, 5), strides=[2, 2], padding='same'))
-    model.add(BatchNormalization())
-    model.add(LeakyReLU())
-
-    model.add(Conv2DTranspose(3, kernel_size=(5, 5), strides=[2, 2], padding='same', data_format='channels_last'))
+    model.add(Conv2D(3, kernel_size=4, padding='same', data_format='channels_last'))
     model.add(Activation("tanh"))
 
     noise = Input(shape=input_shape)
-    
     img = model(noise)
-
-    model.summary()
 
     return Model(noise, img)
 
@@ -119,12 +117,7 @@ if __name__ == '__main__':
     deconv_layers.fit_generator(train_datagen, steps_per_epoch=1000, epochs=1)
 
     test_datagen = get_demo_test()
-    print("Showing example segmentation...")
-    image = imread('segmentation_dataset/images/test/abbey/ADE_val_00000001.jpg')
-    image = imresize(image, (128, 128))
-    image = np.expand_dims(image, axis=0)
-    print(image.shape)
-    results = deconv_layers.predict(image, test_datagen, verbose=1)
+    results = deconv_layers.predict(next(test_datagen), test_datagen, verbose=1)
     print(results.shape)
     for idx, image in enumerate(results):
         imsave("result_." + str(idx) + "png", image)
