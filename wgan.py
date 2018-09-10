@@ -19,7 +19,7 @@ from matplotlib import pyplot as plt
 EPOCHS = 25000
 N_CRITIC = 5
 batch_size = 100
-sample_interval = 100
+sample_interval = 1
 image_shape = (128, 128, 3)
 
 print("Welcome to the Pokemon WGAN!")
@@ -62,11 +62,12 @@ for epoch in range(EPOCHS):
         if (imgs.shape[0] != batch_size):
             datagen = prepare_images("data", batch_size, (128, 128))
             imgs = next(datagen)[0]
+
         # rescale -1 to 1
-        imgs = (imgs.astype(np.float32) - 127.5) / 127.5
+        imgs = (imgs.astype(np.float32) - 0.5) * 2.0
         # get fake images from generator
         # Sample noise as generator input
-        noise = np.random.normal(0, 1, (batch_size, 100))
+        noise = np.random.uniform(-1.0, 1.0, size=[batch_size, 100]).astype('float32')
         # Generate a batch of new images
         fake_imgs = generator.predict(noise)
         
@@ -83,21 +84,28 @@ for epoch in range(EPOCHS):
         print(".", end="", flush=True)
             
     # train generator
-    g_loss =combined.train_on_batch(noise, valid)
+    g_loss = combined.train_on_batch(noise, valid)
 
-    print ("%d [D loss: %f] [G loss: %f]" % (epoch, 1 - d_loss[0], 1 - g_loss[0]))
+    print("%d [D loss: %f] [G loss: %f]" % (epoch, 1 - d_loss[0], 1 - g_loss[0]))
 
-    if epoch % sample_interval == 0:
+    if True: # epoch % sample_interval == 0:
         r, c = 5, 5
         noise = np.random.normal(-1, 1, (batch_size, 100)).astype('float32')
-        gen_imgs = generator.predict(noise, batch_size=5*5)
-
-        gen_imgs = 0.5 * (gen_imgs + 1)
+        gen_imgs = generator.predict(noise, batch_size=5*5).astype('float32')
+        
+        gen_imgs = 0.5 * (gen_imgs + 1.0)
+        max_val = np.max(gen_imgs)
+        min_val = np.min(gen_imgs)
+        if max_val - 1 > 0.0001 or abs(min_val) > 0.0001:
+            print(max_val, min_val, "Image max/min vals too small or large!!")
+        else:
+            gen_imgs = np.clip(gen_imgs, 0, 1)
         fig, axs = plt.subplots(r, c)
         cnt = 0
         for i in axs:
             for p in i:
-                p.imshow(gen_imgs[cnt, :,:,:])
+                p.imshow(gen_imgs[cnt, :, :, :])
                 p.axis("off")
                 cnt += 1
         fig.savefig("images/pokemon_" + str(epoch) + ".png")
+        fig.clear()

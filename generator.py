@@ -1,4 +1,4 @@
-import glob
+import os
 import keras
 from keras.models import Sequential, Model
 import keras.backend as K
@@ -13,20 +13,28 @@ from scipy.misc import imsave, imread
 def make_generator(input_shape=(100,)):
     model = Sequential()
     if __name__ == "__main__":
-        model.add(Conv2D(2, kernel_size=(5, 5), input_shape=input_shape, data_format="channels_last", padding='same'))
+        model.add(Conv2D(2, kernel_size=4, input_shape=input_shape, data_format="channels_last", padding='same'))
         model.add(LeakyReLU())
         model.add(MaxPooling2D((2, 2), padding='same'))
 
-        model.add(Conv2D(64, kernel_size=(5, 5), strides=[2,2], input_shape=input_shape, data_format="channels_last", padding='same'))
-        model.add(LeakyReLU())
-        model.add(MaxPooling2D(padding='same')))
-
-        model.add(Conv2D(128, kernel_size=(5, 5), strides=[2,2], input_shape=input_shape, data_format="channels_last", padding='same'))
+        model.add(Conv2D(64, kernel_size=4, strides=[2,2], padding='same'))
         model.add(LeakyReLU())
         model.add(MaxPooling2D())
-    else:
-        # takes in 100dim noise vector as seed
-        model.add(Dense(4 * 4 * 512, input_dim=100))
+
+        model.add(Conv2D(128, kernel_size=4, strides=[2,2], padding='same'))
+        model.add(LeakyReLU())
+        model.add(MaxPooling2D())
+
+        model.add(Conv2D(256, kernel_size=4, padding='same'))
+        model.add(LeakyReLU())
+        model.add(MaxPooling2D())
+
+        model.add(Conv2D(512, kernel_size=4, padding='same'))
+        model.add(LeakyReLU())
+        model.add(MaxPooling2D())
+
+    # takes in 100dim noise vector as seed
+    model.add(Dense(4 * 4 * 512, input_dim=100))
     model.add(LeakyReLU())
 
     model.add(Reshape((4, 4, 512)))
@@ -73,13 +81,15 @@ def get_demo_data():
     seed = 1
     
     image_generator = image_datagen.flow_from_directory(
-        'segmentation_dataset/images/raws',
+        'segmentation_dataset/images/',
+        classes=['raws'],
         target_size=(128,128),
         class_mode=None,
         seed=seed)
     
     mask_generator = mask_datagen.flow_from_directory(
-        'segmentation_dataset/images/masks',
+        'segmentation_dataset/images/',
+        classes=['masks'],
         target_size=(128,128),
         class_mode=None,
         seed=seed)
@@ -91,6 +101,7 @@ def get_demo_test():
     test_datagen = ImageDataGenerator()
     image_generator = test_datagen.flow_from_directory(
         'segmentation_dataset/images/test',
+        target_size=(128,128),
         class_mode=None)
     return image_generator
 
@@ -114,10 +125,11 @@ if __name__ == '__main__':
         optimizer=keras.optimizers.Adam(lr=1e-5),
         metrics=["accuracy"])
     train_datagen = get_demo_data()
-    deconv_layers.fit_generator(train_datagen, steps_per_epoch=1000, epochs=1)
+
+    deconv_layers.fit_generator(train_datagen, steps_per_epoch=1000, epochs=5)
 
     test_datagen = get_demo_test()
-    results = deconv_layers.predict(next(test_datagen), test_datagen, verbose=1)
+    results = deconv_layers.predict(next(test_datagen), verbose=1)
     print(results.shape)
     for idx, image in enumerate(results):
-        imsave("result_." + str(idx) + "png", image)
+        imsave("result_" + str(idx) + ".png", image)
