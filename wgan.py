@@ -53,12 +53,14 @@ fake = np.ones((batch_size, 1))
 for epoch in range(EPOCHS):
     # train discriminator
     d_iters = N_CRITIC
+    # the second iteration of the wgan paper suggests doing this
+    # to help the discriminator reach convergence faster.
     if epoch < 25 or epoch % 500 == 0:
         d_iters = 100
     for _ in range(d_iters):
         # get real images
         imgs = next(datagen)[0]
-        # if we run out of data, randomly generate more.
+        # if we run out of data, generate more.
         if (imgs.shape[0] != batch_size):
             datagen = prepare_images("data", batch_size, (128, 128))
             imgs = next(datagen)[0]
@@ -70,7 +72,7 @@ for epoch in range(EPOCHS):
         noise = np.random.uniform(-1.0, 1.0, size=[batch_size, 100]).astype('float32')
         # Generate a batch of new images
         fake_imgs = generator.predict(noise)
-        
+
         # train!
         d_loss_real = discriminator.train_on_batch(imgs, valid)
         d_loss_fake = discriminator.train_on_batch(fake_imgs, fake)
@@ -88,7 +90,7 @@ for epoch in range(EPOCHS):
 
     print("%d [D loss: %f] [G loss: %f]" % (epoch, 1 - d_loss[0], 1 - g_loss[0]))
 
-    if True: # epoch % sample_interval == 0:
+    if epoch % sample_interval == 0:
         r, c = 5, 5
         noise = np.random.normal(-1, 1, (batch_size, 100)).astype('float32')
         gen_imgs = generator.predict(noise, batch_size=5*5).astype('float32')
@@ -109,3 +111,12 @@ for epoch in range(EPOCHS):
                 cnt += 1
         fig.savefig("images/pokemon_" + str(epoch) + ".png")
         fig.clear()
+        # also save model at checkpoints
+        combined.save('pokemon_wgan_combined_model.h5')
+        discriminator.save('pokemon_wgan_critic_model.h5')
+        generator.save('pokemon_wgan_generator_model.h5')
+
+print('training complete, saving model...')
+combined.save('pokemon_wgan_combined_model.h5')
+discriminator.save('pokemon_wgan_critic_model.h5')
+generator.save('pokemon_wgan_generator_model.h5')
