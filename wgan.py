@@ -16,21 +16,21 @@ import matplotlib
 matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 
-EPOCHS = 25000
+EPOCHS = 50000
 N_CRITIC = 5
-batch_size = 100
-sample_interval = 1
-image_shape = (128, 128, 3)
+batch_size = 64
+sample_interval = 50
+image_shape = (256, 256, 3)
 
 print("Welcome to the Pokemon WGAN!")
 print("Generating images...")
 
-datagen = prepare_images("data", batch_size, (128, 128))
+datagen = prepare_images("data", batch_size, (256, 256))
 
 print("Images ready. Making model...")
 
 generator = make_generator()
-discriminator = make_discriminator((128, 128, 3))
+discriminator = make_discriminator((256, 256, 3))
 compile_wasserstein_critic(discriminator)
 
 gen_in = Input(shape=(100,))
@@ -62,7 +62,7 @@ for epoch in range(EPOCHS):
         imgs = next(datagen)[0]
         # if we run out of data, generate more.
         if (imgs.shape[0] != batch_size):
-            datagen = prepare_images("data", batch_size, (128, 128))
+            datagen = prepare_images("data", batch_size, (256, 256))
             imgs = next(datagen)[0]
 
         # rescale -1 to 1

@@ -33,6 +33,11 @@ def make_discriminator(input_shape):
     model.add(LeakyReLU(alpha=0.2))
     model.add(Dropout(0.25))
 
+    model.add(Conv2D(256, kernel_size=3, strides=1, padding="same"))
+    model.add(BatchNormalization(momentum=0.8))
+    model.add(LeakyReLU(alpha=0.2))
+    model.add(Dropout(0.25))
+
     model.add(Flatten())
 
     if __name__ == "__main__":

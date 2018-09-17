@@ -60,6 +60,11 @@ def make_generator(input_shape=(100,)):
     model.add(LeakyReLU())
     model.add(UpSampling2D())
 
+    model.add(Conv2D(16, kernel_size=4, padding='same'))
+    model.add(BatchNormalization())
+    model.add(LeakyReLU())
+    model.add(UpSampling2D())
+
     model.add(Conv2D(3, kernel_size=4, padding='same', data_format='channels_last'))
     model.add(Activation("tanh"))
 
