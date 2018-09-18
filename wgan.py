@@ -1,5 +1,5 @@
 from discriminator import make_discriminator, compile_wasserstein_critic, EM_loss
-from generator import make_generator
+from alt_gen import make_generator
 from data_prep import prepare_images
 
 import sys
