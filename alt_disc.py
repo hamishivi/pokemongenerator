@@ -48,7 +48,7 @@ def make_discriminator(input_shape):
     model_input = Input(shape=input_shape)
 
     # parameters for the densenet
-    nb_layers = 2
+    nb_layers = 4
     nb_filter = 16
     nb_dense_block = 2
     growth_rate = 12
@@ -72,7 +72,7 @@ def make_discriminator(input_shape):
 
 def compile_demo(model):
     model.compile(loss=keras.losses.categorical_crossentropy,
-        optimizer=keras.optimizers.RMSprop(lr=0.00005),
+        optimizer=keras.optimizers.Adam(lr=1e-4, epsilon=1e-8),
         metrics=["accuracy"])
 
 # Example: mnist data set (digit recognition)
