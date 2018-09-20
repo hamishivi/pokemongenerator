@@ -38,7 +38,9 @@ def make_generator(input_shape=(100,)):
     model.add(LeakyReLU())
 
     model.add(Reshape((4, 4, 512)))
-    model.add(UpSampling2D())
+    model.add(UpSampling2D()) # google brain paper recommands resize and conv with padding, instead of deconv.
+    # upsampling is secretly just resize images in keras with tf background, with NN interpolation
+    # likwise, padding=same is just tfpad
 
     model.add(Conv2D(256, kernel_size=4, padding='same'))
     model.add(BatchNormalization())

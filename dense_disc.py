@@ -1,11 +1,12 @@
 """
 An alternate discriminator implementation,
-based off DenseNet
+based off DenseNet. Did not perform well at all.
+(maybe due to not enough memory to store larger net)
 """
 import keras
-from keras.models import Sequential, Model
+from keras.models import Model
 import keras.backend as K
-from keras.layers import ZeroPadding2D, Dropout, Conv2D, Dense, Flatten, BatchNormalization, Input, AveragePooling2D, Concatenate
+from keras.layers import Dropout, Conv2D, Dense, BatchNormalization, Input, AveragePooling2D, Concatenate
 from keras.layers.advanced_activations import LeakyReLU
 from keras.layers.pooling import GlobalAveragePooling2D
 
