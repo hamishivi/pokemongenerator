@@ -1,5 +1,6 @@
-from discriminator import make_discriminator, compile_wasserstein_critic, EM_loss
-from alt_gen import make_generator
+from discriminator import compile_wasserstein_critic, EM_loss
+from generator import make_generator
+from alt_disc_resnet import make_discriminator
 from data_prep import prepare_images
 
 import sys
@@ -109,7 +110,7 @@ for epoch in range(EPOCHS):
                 p.imshow(gen_imgs[cnt, :, :, :])
                 p.axis("off")
                 cnt += 1
-        fig.savefig("images/pokemon_" + str(epoch) + ".png")
+        fig.savefig("resnet_images/pokemon_" + str(epoch) + ".png")
         fig.clear()
         # also save model at checkpoints
         combined.save('pokemon_wgan_combined_model.h5')
