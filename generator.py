@@ -14,24 +14,38 @@ def make_generator(input_shape=(100,)):
     model = Sequential()
     if __name__ == "__main__":
         model.add(Conv2D(2, kernel_size=4, input_shape=input_shape, data_format="channels_last", padding='same'))
+        model.add(BatchNormalization())
         model.add(LeakyReLU())
         model.add(MaxPooling2D((2, 2), padding='same'))
 
-        model.add(Conv2D(64, kernel_size=4, strides=[2,2], padding='same'))
+        model.add(Conv2D(64, kernel_size=4, padding='same'))
+        model.add(BatchNormalization())
         model.add(LeakyReLU())
         model.add(MaxPooling2D())
 
-        model.add(Conv2D(128, kernel_size=4, strides=[2,2], padding='same'))
+        model.add(Conv2D(128, kernel_size=4, padding='same'))
+        model.add(BatchNormalization())
         model.add(LeakyReLU())
         model.add(MaxPooling2D())
 
         model.add(Conv2D(256, kernel_size=4, padding='same'))
+        model.add(BatchNormalization())
         model.add(LeakyReLU())
         model.add(MaxPooling2D())
 
         model.add(Conv2D(512, kernel_size=4, padding='same'))
+        model.add(BatchNormalization())
         model.add(LeakyReLU())
         model.add(MaxPooling2D())
+
+        model.add(Conv2D(512, kernel_size=4, padding='same'))
+        model.add(BatchNormalization())
+        model.add(LeakyReLU())
+        model.add(MaxPooling2D())
+
+        model.add(Flatten())
+        model.add(Dense(4096, activation='relu'))
+        model.add(Dense(4096, activation='relu'))
 
     # takes in 100dim noise vector as seed
     model.add(Dense(4 * 4 * 512, input_dim=100))
@@ -62,13 +76,17 @@ def make_generator(input_shape=(100,)):
     model.add(LeakyReLU())
     model.add(UpSampling2D())
 
+# for 256x256 images
 #    model.add(Conv2D(16, kernel_size=4, padding='same'))
 #    model.add(BatchNormalization())
 #    model.add(LeakyReLU())
 #    model.add(UpSampling2D())
 
     model.add(Conv2D(3, kernel_size=4, padding='same', data_format='channels_last'))
-    model.add(Activation("tanh"))
+    if __name__ == '__main__':
+        model.add(Activation("softmax"))
+    else:
+        model.add(Activation('tanh'))
 
     noise = Input(shape=input_shape)
     img = model(noise)
@@ -77,10 +95,7 @@ def make_generator(input_shape=(100,)):
 
 def get_demo_data():
     # we create two instances with the same arguments
-    data_gen_args = dict(rotation_range=90.,
-                         width_shift_range=0.1,
-                         height_shift_range=0.1,
-                         zoom_range=0.2)
+    data_gen_args = dict()
     image_datagen = ImageDataGenerator(**data_gen_args)
     mask_datagen = ImageDataGenerator(**data_gen_args)
     
@@ -129,14 +144,14 @@ def compile_demo(deconv, conv):
 if __name__ == '__main__':
     deconv_layers = make_generator(input_shape=(128,128,3))
     deconv_layers.compile(loss=keras.losses.categorical_crossentropy,
-        optimizer=keras.optimizers.Adam(lr=1e-5),
+        optimizer=keras.optimizers.SGD(lr=0.001, momentum=0.9, decay=0.0005, nesterov=False),
         metrics=["accuracy"])
     train_datagen = get_demo_data()
 
-    deconv_layers.fit_generator(train_datagen, steps_per_epoch=1000, epochs=5)
+    deconv_layers.fit_generator(train_datagen, steps_per_epoch=1000, epochs=50)
 
     test_datagen = get_demo_test()
     results = deconv_layers.predict(next(test_datagen), verbose=1)
-    print(results.shape)
+
     for idx, image in enumerate(results):
-        imsave("result_" + str(idx) + ".png", image)
+        imsave("seg_results/result_" + str(idx) + ".png", image)

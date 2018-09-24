@@ -63,24 +63,15 @@ def make_discriminator(input_shape=None):
 
     x = conv_block(x, 3, [64, 64, 256], strides=(1, 1))
     x = identity_block(x, 3, [64, 64, 256])
-    x = identity_block(x, 3, [64, 64, 256])
 
     x = conv_block(x, 3, [128, 128, 512])
-    x = identity_block(x, 3, [128, 128, 512])
-    x = identity_block(x, 3, [128, 128, 512])
     x = identity_block(x, 3, [128, 128, 512])
 
     x = conv_block(x, 3, [256, 256, 1024])
     x = identity_block(x, 3, [256, 256, 1024])
-    x = identity_block(x, 3, [256, 256, 1024])
-    x = identity_block(x, 3, [256, 256, 1024])
-    x = identity_block(x, 3, [256, 256, 1024])
-    x = identity_block(x, 3, [256, 256, 1024])
 
     x = conv_block(x, 3, [512, 512, 2048])
     x = identity_block(x, 3, [512, 512, 2048])
-    x = identity_block(x, 3, [512, 512, 2048])
-
     x = Flatten()(x)
 
     x = Dense(1, activation='linear')(x)
