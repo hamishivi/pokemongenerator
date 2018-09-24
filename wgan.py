@@ -21,17 +21,17 @@ EPOCHS = 50000
 N_CRITIC = 5
 batch_size = 64
 sample_interval = 50
-image_shape = (256, 256, 3)
+image_shape = (128, 128, 3)
 
 print("Welcome to the Pokemon WGAN!")
 print("Generating images...")
 
-datagen = prepare_images("data", batch_size, (256, 256))
+datagen = prepare_images("data", batch_size, (128, 128))
 
 print("Images ready. Making model...")
 
 generator = make_generator()
-discriminator = make_discriminator((256, 256, 3))
+discriminator = make_discriminator((128, 128, 3))
 compile_wasserstein_critic(discriminator)
 
 gen_in = Input(shape=(100,))
@@ -63,7 +63,7 @@ for epoch in range(EPOCHS):
         imgs = next(datagen)[0]
         # if we run out of data, generate more.
         if (imgs.shape[0] != batch_size):
-            datagen = prepare_images("data", batch_size, (256, 256))
+            datagen = prepare_images("data", batch_size, (128, 128))
             imgs = next(datagen)[0]
 
         # rescale -1 to 1
@@ -110,7 +110,7 @@ for epoch in range(EPOCHS):
                 p.imshow(gen_imgs[cnt, :, :, :])
                 p.axis("off")
                 cnt += 1
-        fig.savefig("resnet_images/pokemon_" + str(epoch) + ".png")
+        fig.savefig("resnet1_images/pokemon_" + str(epoch) + ".png")
         fig.clear()
         # also save model at checkpoints
         combined.save('pokemon_wgan_combined_model.h5')

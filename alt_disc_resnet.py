@@ -7,7 +7,7 @@ energy to write an SEnet or reneXt extension to this.
 import keras
 from keras.models import Model
 import keras.backend as K
-from keras.layers import Dropout, Conv2D, Dense, BatchNormalization, Input, add, ZeroPadding2D
+from keras.layers import Dropout, Conv2D, Dense, BatchNormalization, Input, add, ZeroPadding2D, Flatten
 from keras.layers.advanced_activations import LeakyReLU
 from keras.layers.pooling import GlobalAveragePooling2D, MaxPooling2D
 
@@ -81,8 +81,9 @@ def make_discriminator(input_shape=None):
     x = identity_block(x, 3, [512, 512, 2048])
     x = identity_block(x, 3, [512, 512, 2048])
 
-    x = GlobalAveragePooling2D()(x)
-    x = Dense(10, activation='softmax')(x)
+    x = Flatten()(x)
+
+    x = Dense(1, activation='linear')(x)
 
     return Model(model_in, x)
 
