@@ -1,6 +1,5 @@
-from discriminator import compile_wasserstein_critic, EM_loss
+from discriminator import compile_wasserstein_critic, EM_loss, make_discriminator
 from generator import make_generator
-from alt_disc_resnet import make_discriminator
 from data_prep import prepare_images
 
 import sys
@@ -18,8 +17,8 @@ matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 
 EPOCHS = 50000
-N_CRITIC = 5
-batch_size = 64
+N_CRITIC = 60 #10
+batch_size = 10
 sample_interval = 50
 image_shape = (128, 128, 3)
 
@@ -57,7 +56,7 @@ for epoch in range(EPOCHS):
     # the second iteration of the wgan paper suggests doing this
     # to help the discriminator reach convergence faster.
     if epoch < 25 or epoch % 500 == 0:
-        d_iters = 100
+        d_iters = 640 #100
     for _ in range(d_iters):
         # get real images
         imgs = next(datagen)[0]
@@ -92,7 +91,7 @@ for epoch in range(EPOCHS):
     print("%d [D loss: %f] [G loss: %f]" % (epoch, 1 - d_loss[0], 1 - g_loss[0]))
 
     if epoch % sample_interval == 0:
-        r, c = 5, 5
+        r, c = 2, 5
         noise = np.random.normal(-1, 1, (batch_size, 100)).astype('float32')
         gen_imgs = generator.predict(noise, batch_size=5*5).astype('float32')
         
@@ -100,9 +99,8 @@ for epoch in range(EPOCHS):
         max_val = np.max(gen_imgs)
         min_val = np.min(gen_imgs)
         if max_val - 1 > 0.0001 or abs(min_val) > 0.0001:
-            print(max_val, min_val, "Image max/min vals too small or large!!")
-        else:
-            gen_imgs = np.clip(gen_imgs, 0, 1)
+            print(max_val, min_val, "Image max/min vals may be too small or large!!")
+        gen_imgs = np.clip(gen_imgs, 0, 1)
         fig, axs = plt.subplots(r, c)
         cnt = 0
         for i in axs:
@@ -110,7 +108,7 @@ for epoch in range(EPOCHS):
                 p.imshow(gen_imgs[cnt, :, :, :])
                 p.axis("off")
                 cnt += 1
-        fig.savefig("resnet1_images/pokemon_" + str(epoch) + ".png")
+        fig.savefig("updischalfgen_images/pokemon_" + str(epoch) + ".png")
         fig.clear()
         # also save model at checkpoints
         combined.save('pokemon_wgan_combined_model.h5')

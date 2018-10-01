@@ -4,13 +4,12 @@ import os
 
 def prepare_images(directory, batch_size, target_size, shuffle=True, class_mode="categorical", save=False):
     train_datagen = ImageDataGenerator(
-        rescale=1./255, # is this needed?
+        rescale=1./255,
         zoom_range=0.2, # = crop
         width_shift_range=0.2, # = crop (zoom and move)
         height_shift_range=0.2, # = crop (zoom and move)
         horizontal_flip=True,
-        vertical_flip=True,
-        fill_mode='nearest') # maybe toy with this, can give weird images sometimes
+        vertical_flip=True) # maybe toy with this, can give weird images sometimes
 
     if save:
         train_generator = train_datagen.flow_from_directory(

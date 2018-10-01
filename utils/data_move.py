@@ -6,7 +6,7 @@ This was important for making keras training easier.
 
 import os
 
-directory = 'segmentation_dataset/images/training'
+directory = 'segmentation_dataset/images/validation'
 
 
 def get_all_files_in_folder(folder_path):
@@ -15,10 +15,10 @@ def get_all_files_in_folder(folder_path):
         if os.path.isdir(filename) or 'DS_Store' in filename:
             continue
         elif '_seg' in filename:
-            os.rename(filename, "segmentation_dataset/images/masks/" + file)
+            os.rename(filename, "segmentation_dataset/images/test/masks/" + file)
             print("segmentation_dataset/images/masks/" + file)
         else:
-            os.rename(filename, "segmentation_dataset/images/raws/" + file)
+            os.rename(filename, "segmentation_dataset/images/test/raws/" + file)
             print("segmentation_dataset/images/raws/" + file)
 for folder in os.listdir(directory):
     filename = os.path.join(directory, folder)

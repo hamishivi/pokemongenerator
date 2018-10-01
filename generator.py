@@ -3,7 +3,7 @@ import keras
 from keras.models import Sequential, Model
 import keras.backend as K
 from keras.preprocessing.image import ImageDataGenerator
-from keras.layers import UpSampling2D, Activation, Conv2D, Conv2DTranspose, Dense, Flatten, BatchNormalization, Reshape, Input, MaxPooling2D
+from keras.layers import UpSampling2D, Activation, Conv2D, Conv2DTranspose, Dense, Flatten, BatchNormalization, Reshape, Input, MaxPooling2D, Dropout
 
 from keras.layers.advanced_activations import LeakyReLU
 from discriminator import make_discriminator
@@ -12,77 +12,66 @@ from scipy.misc import imsave, imread
 
 def make_generator(input_shape=(100,)):
     model = Sequential()
+    # segnet encoder-decoder for testing
+    # else just the decoder part
     if __name__ == "__main__":
-        model.add(Conv2D(2, kernel_size=4, input_shape=input_shape, data_format="channels_last", padding='same'))
-        model.add(BatchNormalization())
-        model.add(LeakyReLU())
-        model.add(MaxPooling2D((2, 2), padding='same'))
-
-        model.add(Conv2D(64, kernel_size=4, padding='same'))
+        model.add(Conv2D(3, kernel_size=3, input_shape=input_shape, data_format="channels_last", padding='same'))
         model.add(BatchNormalization())
         model.add(LeakyReLU())
         model.add(MaxPooling2D())
 
-        model.add(Conv2D(128, kernel_size=4, padding='same'))
+        model.add(Conv2D(32, kernel_size=3, padding='same'))
         model.add(BatchNormalization())
         model.add(LeakyReLU())
         model.add(MaxPooling2D())
 
-        model.add(Conv2D(256, kernel_size=4, padding='same'))
+        model.add(Conv2D(64, kernel_size=3, padding='same'))
         model.add(BatchNormalization())
         model.add(LeakyReLU())
         model.add(MaxPooling2D())
 
-        model.add(Conv2D(512, kernel_size=4, padding='same'))
+        model.add(Conv2D(128, kernel_size=3, padding='same'))
         model.add(BatchNormalization())
         model.add(LeakyReLU())
         model.add(MaxPooling2D())
 
-        model.add(Conv2D(512, kernel_size=4, padding='same'))
+        model.add(Conv2D(256, kernel_size=3, padding='same'))
         model.add(BatchNormalization())
         model.add(LeakyReLU())
         model.add(MaxPooling2D())
+    else:
+        # takes in 100dim noise vector as seed
+        model.add(Dense(4 * 4 * 512, input_dim=100))
+        model.add(BatchNormalization())
+        model.add(LeakyReLU())
+        model.add(Reshape((4, 4, 512)))
 
-        model.add(Flatten())
-        model.add(Dense(4096, activation='relu'))
-        model.add(Dense(4096, activation='relu'))
+        model.add(Conv2D(512, kernel_size=3, padding='same'))
+        model.add(BatchNormalization())
+        model.add(LeakyReLU())
 
-    # takes in 100dim noise vector as seed
-    model.add(Dense(4 * 4 * 512, input_dim=100))
-    model.add(LeakyReLU())
-
-    model.add(Reshape((4, 4, 512)))
-    model.add(UpSampling2D()) # google brain paper recommands resize and conv with padding, instead of deconv.
-    # upsampling is secretly just resize images in keras with tf background, with NN interpolation
-    # likwise, padding=same is just tfpad
-
-    model.add(Conv2D(256, kernel_size=4, padding='same'))
+    model.add(UpSampling2D())
+    model.add(Conv2D(256, kernel_size=3, padding='same'))
     model.add(BatchNormalization())
     model.add(LeakyReLU())
-    model.add(UpSampling2D())
 
-    model.add(Conv2D(128, kernel_size=4, padding='same'))
+    model.add(UpSampling2D())
+    model.add(Conv2D(256, kernel_size=3, padding='same'))
     model.add(BatchNormalization())
     model.add(LeakyReLU())
-    model.add(UpSampling2D())
 
-    model.add(Conv2D(64, kernel_size=4, padding='same'))
+    model.add(UpSampling2D())
+    model.add(Conv2D(128, kernel_size=3, padding='same'))
     model.add(BatchNormalization())
     model.add(LeakyReLU())
-    model.add(UpSampling2D())
 
-    model.add(Conv2D(32, kernel_size=4, padding='same'))
+    model.add(UpSampling2D())
+    model.add(Conv2D(32, kernel_size=3, padding='same'))
     model.add(BatchNormalization())
     model.add(LeakyReLU())
+
     model.add(UpSampling2D())
-
-# for 256x256 images
-#    model.add(Conv2D(16, kernel_size=4, padding='same'))
-#    model.add(BatchNormalization())
-#    model.add(LeakyReLU())
-#    model.add(UpSampling2D())
-
-    model.add(Conv2D(3, kernel_size=4, padding='same', data_format='channels_last'))
+    model.add(Conv2D(3, kernel_size=3, padding='same', data_format='channels_last'))
     if __name__ == '__main__':
         model.add(Activation("softmax"))
     else:
@@ -107,6 +96,7 @@ def get_demo_data():
         classes=['raws'],
         target_size=(128,128),
         class_mode=None,
+        batch_size=128,
         seed=seed)
     
     mask_generator = mask_datagen.flow_from_directory(
@@ -114,18 +104,39 @@ def get_demo_data():
         classes=['masks'],
         target_size=(128,128),
         class_mode=None,
+        batch_size=128,
         seed=seed)
     
     # combine generators into one which yields image and masks
     return zip(image_generator, mask_generator)
 
 def get_demo_test():
-    test_datagen = ImageDataGenerator()
-    image_generator = test_datagen.flow_from_directory(
-        'segmentation_dataset/images/test',
+        # we create two instances with the same arguments
+    data_gen_args = dict()
+    image_datagen = ImageDataGenerator(**data_gen_args)
+    mask_datagen = ImageDataGenerator(**data_gen_args)
+    
+    # Provide the same seed and keyword arguments to the fit and flow methods
+    seed = 1
+    
+    image_generator = image_datagen.flow_from_directory(
+        'segmentation_dataset/images/test/',
+        classes=['raws'],
         target_size=(128,128),
-        class_mode=None)
-    return image_generator
+        class_mode=None,
+        batch_size=128,
+        seed=seed)
+    
+    mask_generator = mask_datagen.flow_from_directory(
+        'segmentation_dataset/images/test/',
+        classes=['masks'],
+        target_size=(128,128),
+        class_mode=None,
+        batch_size=128,
+        seed=seed)
+    
+    # combine generators into one which yields image and masks
+    return zip(image_generator, mask_generator)
 
 def compile_demo(deconv, conv):
     in_conv = Input(shape=(128,128,3))
@@ -144,14 +155,22 @@ def compile_demo(deconv, conv):
 if __name__ == '__main__':
     deconv_layers = make_generator(input_shape=(128,128,3))
     deconv_layers.compile(loss=keras.losses.categorical_crossentropy,
-        optimizer=keras.optimizers.SGD(lr=0.001, momentum=0.9, decay=0.0005, nesterov=False),
+        optimizer=keras.optimizers.SGD(lr=0.001, momentum=0.9),
         metrics=["accuracy"])
     train_datagen = get_demo_data()
-
-    deconv_layers.fit_generator(train_datagen, steps_per_epoch=1000, epochs=50)
-
+    # train
+    deconv_layers.fit_generator(train_datagen, steps_per_epoch=122, epochs=50, validation_data=get_demo_test(), validation_steps=14)
+    # evaluate
     test_datagen = get_demo_test()
-    results = deconv_layers.predict(next(test_datagen), verbose=1)
+    deconv_layers.evaluate_generator(test_datagen, steps=14, verbose=1)
+    # reset test datagen to see results
+    test_datagen = get_demo_test()
+    predict_images = next(test_datagen)
+    test_raws = predict_images[1]
+    results = deconv_layers.predict(predict_images[0], verbose=1)
 
     for idx, image in enumerate(results):
         imsave("seg_results/result_" + str(idx) + ".png", image)
+        imsave("seg_results/image_" + str(idx) + ".png", test_raws[idx])
+
+    

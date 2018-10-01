@@ -13,22 +13,32 @@ def EM_loss(y_true, y_pred):
 def make_discriminator(input_shape):
     model = Sequential()
 
-    model.add(Conv2D(16, kernel_size=3, strides=2, input_shape=input_shape, padding="same"))
-    model.add(LeakyReLU(alpha=0.2))
-    model.add(Dropout(0.25))
-
-    model.add(Conv2D(32, kernel_size=3, strides=2, padding="same"))
-    model.add(ZeroPadding2D(padding=((0,1),(0,1))))
+    model.add(Conv2D(16, kernel_size=3, input_shape=input_shape, padding="same"))
     model.add(BatchNormalization(momentum=0.8))
     model.add(LeakyReLU(alpha=0.2))
     model.add(Dropout(0.25))
 
-    model.add(Conv2D(64, kernel_size=3, strides=2, padding="same"))
+    model.add(Conv2D(32, kernel_size=3, padding="same"))
     model.add(BatchNormalization(momentum=0.8))
     model.add(LeakyReLU(alpha=0.2))
     model.add(Dropout(0.25))
 
-    model.add(Conv2D(128, kernel_size=3, strides=1, padding="same"))
+    model.add(Conv2D(64, kernel_size=3, padding="same"))
+    model.add(BatchNormalization(momentum=0.8))
+    model.add(LeakyReLU(alpha=0.2))
+    model.add(Dropout(0.25))
+
+    model.add(Conv2D(128, kernel_size=3, padding="same"))
+    model.add(BatchNormalization(momentum=0.8))
+    model.add(LeakyReLU(alpha=0.2))
+    model.add(Dropout(0.25))
+
+    model.add(Conv2D(256, kernel_size=3, padding="same"))
+    model.add(BatchNormalization(momentum=0.8))
+    model.add(LeakyReLU(alpha=0.2))
+    model.add(Dropout(0.25))
+
+    model.add(Conv2D(512, kernel_size=3, padding="same"))
     model.add(BatchNormalization(momentum=0.8))
     model.add(LeakyReLU(alpha=0.2))
     model.add(Dropout(0.25))
