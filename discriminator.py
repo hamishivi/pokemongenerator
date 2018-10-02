@@ -1,4 +1,5 @@
 import keras
+from keras.utils import plot_model
 from keras.models import Sequential, Model
 import keras.backend as K
 from keras.layers import ZeroPadding2D, Dropout, Conv2D, Dense, Flatten, BatchNormalization, Input
@@ -10,10 +11,10 @@ from keras.layers.advanced_activations import LeakyReLU
 def EM_loss(y_true, y_pred):
     return K.mean(y_true * y_pred)
 
-def make_discriminator(input_shape):
+def make_discriminator(input_shape, demo=False):
     model = Sequential()
 
-    model.add(Conv2D(16, kernel_size=3, input_shape=input_shape, padding="same"))
+    model.add(Conv2D(16, kernel_size=3, input_shape=input_shape, padding="same", name="input"))
     model.add(BatchNormalization(momentum=0.8))
     model.add(LeakyReLU(alpha=0.2))
     model.add(Dropout(0.25))
@@ -45,13 +46,15 @@ def make_discriminator(input_shape):
 
     model.add(Flatten())
 
-    if __name__ == "__main__":
+    if demo:
         model.add(Dense(10, activation='softmax'))
     else:
-        model.add(Dense(1, activation='linear'))
+        model.add(Dense(1, activation='linear', name='output'))
 
     img = Input(shape=input_shape)
     validity = model(img)
+
+    plot_model(model, to_file='report_images/discriminator.png')
 
     return Model(img, validity, name="discriminator")
 
@@ -66,6 +69,20 @@ def compile_demo(model):
         metrics=["accuracy"])
 
 # Example: mnist data set (digit recognition)
+def mnist(filepath):
+    from keras.datasets import mnist
+
+    (_, _), (x_test, y_test) = mnist.load_data()
+    x_test = (x_test.reshape(x_test.shape[0], 28, 28, 1).astype('float32')) / 255
+    y_test = keras.utils.to_categorical(y_test, num_classes=10)
+    model = make_discriminator((28, 28, 1), demo=True)
+    # no EM as that needs to be paired with the generator
+    compile_demo(model)
+    model.load_weights(filepath, by_name=False)
+    score = model.evaluate(x_test, y_test, verbose=1)
+    print('Test loss:', score[0])
+    print('Test accuracy:', score[1])
+
 if __name__ == "__main__":
     from keras.datasets import mnist
 
@@ -74,7 +91,7 @@ if __name__ == "__main__":
     x_test = (x_test.reshape(x_test.shape[0], 28, 28, 1).astype('float32')) / 255
     y_test = keras.utils.to_categorical(y_test, num_classes=10)
     y_train = keras.utils.to_categorical(y_train, num_classes=10)
-    model = make_discriminator((28, 28, 1))
+    model = make_discriminator((28, 28, 1), demo=True)
     # no EM as that needs to be paired with the generator
     compile_demo(model)
 
