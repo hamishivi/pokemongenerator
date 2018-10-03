@@ -1,6 +1,6 @@
 """
-Util for converting all png images in a folder to RGB. This was required as many pokemon
-images were RGBA, requiring explicit conversion.
+Util for converting all png images in a folder to RGB.
+As many pokemon images were RGBA, they required conversion.
 """
 import sys
 import os

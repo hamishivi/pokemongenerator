@@ -1,38 +1,46 @@
-from discriminator import compile_wasserstein_critic, EM_loss, make_discriminator
-from generator import make_generator
-from data_prep import prepare_images
-
-import sys
+'''
+Main file that actually runs the WGAN training algorithm
+and brings together all the models.
+'''
+import numpy as np
+from matplotlib import pyplot as plt
 
 import keras
-from keras.models import Sequential, Model
+from keras.models import Model
 import keras.backend as K
 from keras.layers import Input
 
-import numpy as np
+# import models
+from discriminator import make_discriminator
+from generator import make_generator
+from data_prep import prepare_images
 
-import matplotlib
-# for server running
-matplotlib.use('Agg')
-from matplotlib import pyplot as plt
+def EM_loss(y_true, y_pred):
+    return K.mean(y_true * y_pred)
 
-EPOCHS = 50000
+# parameters to tune
+EPOCHS = 20000
 N_CRITIC = 10
-batch_size = 64
-sample_interval = 50
-image_shape_ch = (128, 128, 3)
-image_shape = (128, 128)
+BATCH_SIZE = 64
+SAMPLE_INTERVAL = 50
+IMAGE_SHAPE = (128, 128)
+IMAGE_SHAPE_CH = (128, 128, 3)
+LOG_FILE = 'logs/log_baseline.txt'
 
 print("Welcome to the Pokemon WGAN!")
-print("Generating images...")
+print("Preparing images...")
 
-datagen = prepare_images("data", batch_size, image_shape)
+# preprocess data
+datagen = prepare_images("data", BATCH_SIZE, IMAGE_SHAPE)
 
-print("Images ready. Making model...")
+print("Images prepped. Making WGAN...")
 
+# make our models
 generator = make_generator()
-discriminator = make_discriminator(image_shape_ch)
-compile_wasserstein_critic(discriminator)
+discriminator = make_discriminator(IMAGE_SHAPE_CH)
+discriminator.compile(loss=EM_loss,
+                      optimizer=keras.optimizers.RMSprop(lr=0.00005),
+                      metrics=["accuracy"])
 
 gen_in = Input(shape=(100,))
 generated_img = generator(gen_in)
@@ -42,38 +50,35 @@ is_valid = discriminator(generated_img)
 
 combined = Model(gen_in, is_valid)
 combined.compile(loss=EM_loss,
-optimizer=keras.optimizers.RMSprop(lr=0.00005),
-metrics=['accuracy'])
+                 optimizer=keras.optimizers.RMSprop(lr=0.00005),
+                 metrics=['accuracy'])
 
-print("Models built! Starting to train...")
+print("WGAN built! Starting to train...")
 
 # labels for training
-valid = np.ones((batch_size, 1))
-fake = -np.ones((batch_size, 1))
+valid = -np.ones((BATCH_SIZE, 1))
+fake = np.ones((BATCH_SIZE, 1))
 
 for epoch in range(EPOCHS):
-    # train discriminator
     d_iters = N_CRITIC
     # the second iteration of the wgan paper suggests doing this
     # to help the discriminator reach convergence faster.
     if epoch < 25 or epoch % 500 == 0:
-        d_iters = 10
+        d_iters = 100
     for _ in range(d_iters):
         # get real images
         imgs = next(datagen)[0]
         # if we run out of data, generate more.
-        if (imgs.shape[0] != batch_size):
-            datagen = prepare_images("data", batch_size, image_shape)
+        if imgs.shape[0] != BATCH_SIZE:
+            datagen = prepare_images("data", BATCH_SIZE, IMAGE_SHAPE)
             imgs = next(datagen)[0]
 
-        # rescale -1 to 1
+        # rescale images to range [-1, 1]
         imgs = (imgs.astype(np.float32) - 0.5) * 2.0
         # get fake images from generator
-        # Sample noise as generator input
-        noise = np.random.uniform(-1.0, 1.0, size=[batch_size, 100]).astype('float32')
-        # Generate a batch of new images
+        # Sample noise as generator input to generate fake images
+        noise = np.random.uniform(-1.0, 1.0, size=[BATCH_SIZE, 100]).astype('float32')
         fake_imgs = generator.predict(noise)
-
         # train!
         d_loss_real = discriminator.train_on_batch(imgs, valid)
         d_loss_fake = discriminator.train_on_batch(fake_imgs, fake)
@@ -83,26 +88,26 @@ for epoch in range(EPOCHS):
             weights = layer.get_weights()
             weights = [np.clip(w, -0.01, 0.01) for w in weights]
             layer.set_weights(weights)
-
+        # print a dot so we can see the training is going along
         print(".", end="", flush=True)
-            
+
     # train generator
     g_loss = combined.train_on_batch(noise, valid)
 
-    print("%d [D loss: %f] [G loss: %f]" % (epoch, d_loss[0], g_loss[0]))
+    # end of iteration: record loss
+    print("%d [D loss: %f] [G loss: %f]" % (epoch, 1 - d_loss[0], 1 - g_loss[0]))
+    # we also record it in a file
+    with open(LOG_FILE, 'a+') as f:
+        f.write('%d %f %f\n' % (epoch, 1 - d_loss[0], 1 - g_loss[0]))
 
-    if epoch % sample_interval == 0:
-        noise = np.random.normal(-1, 1, (batch_size, 100)).astype('float32')
-        gen_imgs = generator.predict(noise, batch_size=batch_size).astype('float32')
-        
+    if epoch % SAMPLE_INTERVAL == 0:
+        noise = np.random.normal(-1, 1, (BATCH_SIZE, 100)).astype('float32')
+        gen_imgs = generator.predict(noise, batch_size=BATCH_SIZE).astype('float32')
+
         gen_imgs = 0.5 * (gen_imgs + 1.0)
-        max_val = np.max(gen_imgs)
-        min_val = np.min(gen_imgs)
-        if max_val - 1 > 0.0001 or abs(min_val) > 0.0001:
-            print(max_val, min_val, "Image max/min vals may be too small or large!!")
         gen_imgs = np.clip(gen_imgs, 0, 1)
-        r = int(np.sqrt(batch_size))
-        fig, axs = plt.subplots(r, int(batch_size/r))
+
+        fig, axs = plt.subplots(int(np.sqrt(BATCH_SIZE)), int(np.sqrt(BATCH_SIZE)))
         cnt = 0
         for i in axs:
             for p in i:

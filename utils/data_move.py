@@ -1,13 +1,11 @@
 """
-Util script moving the segmentation dataset I got (http://groups.csail.mit.edu/vision/datasets/ADE20K/)
-into appropriate folders, ordered correctly.
-This was important for making keras training easier.
+Script to move the segmentation dataset I used
+into appropriate folders, ordered correctly. Used to
+make keras training easier.
 """
-
 import os
 
 directory = 'segmentation_dataset/images/validation'
-
 
 def get_all_files_in_folder(folder_path):
     for file in os.listdir(folder_path):
@@ -20,6 +18,7 @@ def get_all_files_in_folder(folder_path):
         else:
             os.rename(filename, "segmentation_dataset/images/test/raws/" + file)
             print("segmentation_dataset/images/raws/" + file)
+
 for folder in os.listdir(directory):
     filename = os.path.join(directory, folder)
     if 'DS_Store' in filename:
