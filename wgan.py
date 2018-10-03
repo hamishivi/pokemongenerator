@@ -21,6 +21,7 @@ N_CRITIC = 60 #10
 batch_size = 10
 sample_interval = 50
 image_shape = (128, 128, 3)
+log_file = 'logs/log_baseline.txt'
 
 print("Welcome to the Pokemon WGAN!")
 print("Generating images...")
@@ -56,7 +57,7 @@ for epoch in range(EPOCHS):
     # the second iteration of the wgan paper suggests doing this
     # to help the discriminator reach convergence faster.
     if epoch < 25 or epoch % 500 == 0:
-        d_iters = 640 #100
+        d_iters = 1
     for _ in range(d_iters):
         # get real images
         imgs = next(datagen)[0]
@@ -89,6 +90,10 @@ for epoch in range(EPOCHS):
     g_loss = combined.train_on_batch(noise, valid)
 
     print("%d [D loss: %f] [G loss: %f]" % (epoch, 1 - d_loss[0], 1 - g_loss[0]))
+
+    # end of iteration: save loss and iteration number to file
+    with open(log_file, 'a+') as f:
+        f.write('%d %f %f\n' % (epoch, 1 - d_loss[0], 1 - g_loss[0]))
 
     if epoch % sample_interval == 0:
         r, c = 2, 5

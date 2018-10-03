@@ -1,7 +1,6 @@
 ---
 title: "COMP3419 Assignment - PokéGAN"
 author: 460299200
-mainfont: Charis SIL
 bibliography: gan.bib
 header-includes:
     - \usepackage{mathtools}
@@ -167,6 +166,12 @@ In order to determine the best setup, I ran four different WGAN configurations f
 - resnet discriminator and improved generator (the improved WGAN)
 
 Below I graph the loss values for the generators of each WGAN:
+
+\begin{figure}[H]
+    \centering
+	\includegraphics[width=\linewidth]{example.pdf}
+	\caption{Example figure proudly made with matplotlib's PGF backend.}
+\end{figure}
 
 Below I graph the loss values for the discriminators of each WGAN:
 

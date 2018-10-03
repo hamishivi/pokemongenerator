@@ -1,8 +1,10 @@
 '''
 A discriminator using the resnet architecture,
-which won competitions in 2015.
-This isn't state of the art, but I don't have the time nor
-energy to write an SEnet or reneXt extension to this.
+which won competitions in 2015. This is based off the
+code found at https://github.com/keras-team/keras-applications/blob/master/keras_applications/resnet50.py,
+which is the official keras implementation of resnet.
+Due to memory and time constraints, I could not fit the entire model into
+my GPU.
 '''
 import keras
 from keras.utils import plot_model

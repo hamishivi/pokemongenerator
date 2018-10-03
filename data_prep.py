@@ -1,7 +1,6 @@
 from keras.preprocessing.image import ImageDataGenerator
 import os
 
-
 def prepare_images(directory, batch_size, target_size, shuffle=True, class_mode="categorical", save=False):
     train_datagen = ImageDataGenerator(
         rescale=1./255,
