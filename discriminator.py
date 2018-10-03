@@ -1,15 +1,11 @@
+'''
+Baseline discriminator, a straightforward ConvNet.
+'''
 import keras
 from keras.utils import plot_model
 from keras.models import Sequential, Model
-import keras.backend as K
-from keras.layers import ZeroPadding2D, Dropout, Conv2D, Dense, Flatten, BatchNormalization, Input
+from keras.layers import Dropout, Conv2D, Dense, Flatten, BatchNormalization, Input
 from keras.layers.advanced_activations import LeakyReLU
-
-
-# we feed +1 as label for real and -1 for fake images
-# in the D, and opposite in the G.
-def EM_loss(y_true, y_pred):
-    return K.mean(y_true * y_pred)
 
 def make_discriminator(input_shape, demo=False):
     model = Sequential()
@@ -54,21 +50,9 @@ def make_discriminator(input_shape, demo=False):
     img = Input(shape=input_shape)
     validity = model(img)
 
-    plot_model(model, to_file='report_images/discriminator.png')
-
     return Model(img, validity, name="discriminator")
 
-def compile_wasserstein_critic(model):
-    model.compile(loss=EM_loss,
-        optimizer=keras.optimizers.RMSprop(lr=0.00005),
-        metrics=["accuracy"])
-
-def compile_demo(model):
-    model.compile(loss=keras.losses.categorical_crossentropy,
-        optimizer=keras.optimizers.RMSprop(lr=0.00005),
-        metrics=["accuracy"])
-
-# Example: mnist data set (digit recognition)
+# For pretrained models
 def mnist(filepath):
     from keras.datasets import mnist
 
@@ -76,9 +60,11 @@ def mnist(filepath):
     x_test = (x_test.reshape(x_test.shape[0], 28, 28, 1).astype('float32')) / 255
     y_test = keras.utils.to_categorical(y_test, num_classes=10)
     model = make_discriminator((28, 28, 1), demo=True)
-    # no EM as that needs to be paired with the generator
-    compile_demo(model)
+    model.compile(loss=keras.losses.categorical_crossentropy,
+                  optimizer=keras.optimizers.RMSprop(lr=0.00005),
+                  metrics=["accuracy"])
     model.load_weights(filepath, by_name=False)
+
     score = model.evaluate(x_test, y_test, verbose=1)
     print('Test loss:', score[0])
     print('Test accuracy:', score[1])
@@ -92,18 +78,15 @@ if __name__ == "__main__":
     y_test = keras.utils.to_categorical(y_test, num_classes=10)
     y_train = keras.utils.to_categorical(y_train, num_classes=10)
     model = make_discriminator((28, 28, 1), demo=True)
-    # no EM as that needs to be paired with the generator
-    compile_demo(model)
-
-    tbCallBack = keras.callbacks.TensorBoard(log_dir='./log', histogram_freq=0, write_graph=True, write_images=True)
-
+    model.compile(loss=keras.losses.categorical_crossentropy,
+                  optimizer=keras.optimizers.RMSprop(lr=0.00005),
+                  metrics=["accuracy"])
 
     model.fit(x_train, y_train,
-          batch_size=128,
-          epochs=6,
-          verbose=1,
-          validation_data=(x_test, y_test),
-          callbacks=[tbCallBack])
+              batch_size=128,
+              epochs=6,
+              verbose=1,
+              validation_data=(x_test, y_test))
     score = model.evaluate(x_test, y_test, verbose=1)
     print('Test loss:', score[0])
     print('Test accuracy:', score[1])

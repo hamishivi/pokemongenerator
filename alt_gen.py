@@ -1,22 +1,23 @@
 """
 A alternate generator setup, using transpose layers instead of
-upsampling.
+upsampling. I tested on a semantic segmentation dataset, and so
+for that also add an encoder block that mirrors the decoder block
+(that forms the generator in the actual WGAN).
 """
-import os
 import keras
 from keras.utils import plot_model
 from keras.models import Sequential, Model
-import keras.backend as K
 from keras.preprocessing.image import ImageDataGenerator
-from keras.layers import UpSampling2D, Activation, Conv2D, Conv2DTranspose, Dense, Flatten, BatchNormalization, Reshape, Input, MaxPooling2D
+from keras.layers import Activation, Conv2D, Conv2DTranspose, Dense, \
+    BatchNormalization, Reshape, Input, MaxPooling2D
 from keras.layers.advanced_activations import LeakyReLU
-from scipy.misc import imsave
 
 def make_alt_generator(input_shape=(100,), demo=False):
     model = Sequential()
 
     if demo:
-        model.add(Conv2D(3, kernel_size=3, input_shape=input_shape, data_format="channels_last", padding='same'))
+        model.add(Conv2D(3, kernel_size=3, input_shape=input_shape,
+                         data_format="channels_last", padding='same'))
         model.add(BatchNormalization())
         model.add(LeakyReLU())
         model.add(MaxPooling2D())
@@ -67,7 +68,6 @@ def make_alt_generator(input_shape=(100,), demo=False):
     model.add(BatchNormalization())
     model.add(LeakyReLU())
 
-
     model.add(Conv2DTranspose(3, kernel_size=5, padding='same'))
     model.add(Activation("tanh", name='output'))
 
@@ -76,17 +76,16 @@ def make_alt_generator(input_shape=(100,), demo=False):
 
     return Model(noise, img)
 
-def get_demo_data():
+def get_demo_data(directory):
     # we create two instances with the same arguments
-    data_gen_args = dict()
-    image_datagen = ImageDataGenerator(**data_gen_args)
-    mask_datagen = ImageDataGenerator(**data_gen_args)
+    image_datagen = ImageDataGenerator()
+    mask_datagen = ImageDataGenerator()
 
     # Provide the same seed and keyword arguments to the fit and flow methods
     seed = 1
 
     image_generator = image_datagen.flow_from_directory(
-        'segmentation_dataset/images/',
+        directory,
         classes=['raws'],
         target_size=(128, 128),
         class_mode=None,
@@ -94,7 +93,7 @@ def get_demo_data():
         seed=seed)
 
     mask_generator = mask_datagen.flow_from_directory(
-        'segmentation_dataset/images/',
+        directory,
         classes=['masks'],
         target_size=(128, 128),
         class_mode=None,
@@ -104,64 +103,32 @@ def get_demo_data():
     # combine generators into one which yields image and masks
     return zip(image_generator, mask_generator)
 
-def get_demo_test():
-        # we create two instances with the same arguments
-    data_gen_args = dict()
-    image_datagen = ImageDataGenerator(**data_gen_args)
-    mask_datagen = ImageDataGenerator(**data_gen_args)
-    
-    # Provide the same seed and keyword arguments to the fit and flow methods
-    seed = 1
-    
-    image_generator = image_datagen.flow_from_directory(
-        'segmentation_dataset/images/test/',
-        classes=['raws'],
-        target_size=(128,128),
-        class_mode=None,
-        batch_size=128,
-        seed=seed)
-    
-    mask_generator = mask_datagen.flow_from_directory(
-        'segmentation_dataset/images/test/',
-        classes=['masks'],
-        target_size=(128,128),
-        class_mode=None,
-        batch_size=128,
-        seed=seed)
-    
-    # combine generators into one which yields image and masks
-    return zip(image_generator, mask_generator)
-
+# for pretrained model
 def ad20k_alt(filepath):
     model = make_alt_generator(input_shape=(128, 128, 3), demo=True)
     model.compile(loss=keras.losses.categorical_crossentropy,
-        optimizer=keras.optimizers.SGD(lr=0.001, momentum=0.9),
-        metrics=["accuracy"])
+                  optimizer=keras.optimizers.SGD(lr=0.001, momentum=0.9),
+                  metrics=["accuracy"])
     # evaluate
-    model.load_weights(filepath)
-    test_datagen = get_demo_test()
+    model.load_weights(filepath, by_name=False)
+    test_datagen = get_demo_data('segmentation_dataset/images/test/')
     score = model.evaluate_generator(test_datagen, steps=14, verbose=1)
     print('Test loss:', score[0])
     print('Test accuracy:', score[1])
 
 
 if __name__ == '__main__':
-    model = make_alt_generator(input_shape=(128,128,3), demo=True)
-    model.compile(loss=keras.losses.categorical_crossentropy,
-        optimizer=keras.optimizers.SGD(lr=0.001, momentum=0.9),
-        metrics=["accuracy"])
-    train_datagen = get_demo_data()
+    generator = make_alt_generator(input_shape=(128, 128, 3), demo=True)
+    generator.compile(loss=keras.losses.categorical_crossentropy,
+                      optimizer=keras.optimizers.SGD(lr=0.001, momentum=0.9),
+                      metrics=["accuracy"])
+    train_datagen = get_demo_data('segmentation_dataset/images/')
     # train
-    model.fit_generator(train_datagen, steps_per_epoch=122, epochs=50, validation_data=get_demo_test(), validation_steps=14)
+    generator.fit_generator(train_datagen,
+                            steps_per_epoch=122,
+                            epochs=50,
+                            validation_data=get_demo_data('segmentation_dataset/images/test/'),
+                            validation_steps=14)
     # evaluate
-    test_datagen = get_demo_test()
-    model.evaluate_generator(test_datagen, steps=14, verbose=1)
-    # reset test datagen to see results
-    test_datagen = get_demo_test()
-    predict_images = next(test_datagen)
-    test_raws = predict_images[1]
-    results = model.predict(predict_images[0], verbose=1)
-
-    for idx, image in enumerate(results):
-        imsave("seg_results/result_" + str(idx) + ".png", image)
-        imsave("seg_results/image_" + str(idx) + ".png", test_raws[idx])
+    test_datagen = get_demo_data('segmentation_dataset/images/test/')
+    generator.evaluate_generator(test_datagen, steps=14, verbose=1)

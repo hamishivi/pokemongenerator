@@ -1,30 +1,32 @@
-from keras.preprocessing.image import ImageDataGenerator
+'''
+Basic module for preprocessing images and applying
+data augmentation.
+'''
 import os
+from keras.preprocessing.image import ImageDataGenerator
 
-def prepare_images(directory, batch_size, target_size, shuffle=True, class_mode="categorical", save=False):
+def prepare_images(directory, batch_size, target_size, save=False):
     train_datagen = ImageDataGenerator(
         rescale=1./255,
         zoom_range=0.2, # = crop
         width_shift_range=0.2, # = crop (zoom and move)
         height_shift_range=0.2, # = crop (zoom and move)
         horizontal_flip=True,
-        vertical_flip=True) # maybe toy with this, can give weird images sometimes
+        vertical_flip=True)
 
     if save:
         train_generator = train_datagen.flow_from_directory(
             directory,
-            target_size=target_size, # obviously need to tinker with here
+            target_size=target_size,
             batch_size=batch_size,
-            class_mode=class_mode,
-            shuffle=shuffle,
+            shuffle=True,
             save_to_dir='transform')
     else:
         train_generator = train_datagen.flow_from_directory(
             directory,
-            target_size=target_size, # obviously need to tinker with here
+            target_size=target_size,
             batch_size=batch_size,
-            class_mode=class_mode,
-            shuffle=shuffle)
+            shuffle=True)
 
     return train_generator
 

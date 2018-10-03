@@ -1,4 +1,4 @@
-from discriminator import compile_wasserstein_critic, EM_loss, make_discriminator
+from discriminator import EM_loss, make_discriminator
 from generator import make_generator
 from data_prep import prepare_images
 
@@ -30,9 +30,16 @@ datagen = prepare_images("data", batch_size, (128, 128))
 
 print("Images ready. Making model...")
 
+# we feed +1 as label for real and -1 for fake images
+# in the D, and opposite in the G.
+def EM_loss(y_true, y_pred):
+    return K.mean(y_true * y_pred)
+
 generator = make_generator()
 discriminator = make_discriminator((128, 128, 3))
-compile_wasserstein_critic(discriminator)
+discriminator.compile(loss=EM_loss,
+    optimizer=keras.optimizers.RMSprop(lr=0.00005),
+    metrics=["accuracy"])
 
 gen_in = Input(shape=(100,))
 generated_img = generator(gen_in)
@@ -42,8 +49,8 @@ is_valid = discriminator(generated_img)
 
 combined = Model(gen_in, is_valid)
 combined.compile(loss=EM_loss,
-optimizer=keras.optimizers.RMSprop(lr=0.00005),
-metrics=['accuracy'])
+    optimizer=keras.optimizers.RMSprop(lr=0.00005),
+    metrics=['accuracy'])
 
 print("Models built! Starting to train...")
 

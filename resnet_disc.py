@@ -9,10 +9,9 @@ my GPU.
 import keras
 from keras.utils import plot_model
 from keras.models import Model
-import keras.backend as K
-from keras.layers import Dropout, Conv2D, Dense, BatchNormalization, Input, add, ZeroPadding2D, Flatten
+from keras.layers import Conv2D, Dense, BatchNormalization, Input, add, Flatten
 from keras.layers.advanced_activations import LeakyReLU
-from keras.layers.pooling import GlobalAveragePooling2D, MaxPooling2D
+from keras.layers.pooling import MaxPooling2D
 
 def identity_block(input_model, fil):
     x = Conv2D(fil, (1, 1), padding='same')(input_model)
@@ -32,7 +31,7 @@ def identity_block(input_model, fil):
 
 def conv_block(input_model, fil):
     # route 1
-    x = Conv2D(fil, (1, 1), strides=(2,2))(input_model)
+    x = Conv2D(fil, (1, 1), strides=(2, 2))(input_model)
     x = BatchNormalization()(x)
     x = LeakyReLU()(x)
 
@@ -44,7 +43,7 @@ def conv_block(input_model, fil):
     x = BatchNormalization()(x)
 
     # shortcut route - required to downsample the image
-    y = Conv2D(fil*4, (1, 1), strides=(2,2))(input_model)
+    y = Conv2D(fil*4, (1, 1), strides=(2, 2))(input_model)
     y = BatchNormalization()(y)
 
     # the paths converge
@@ -80,28 +79,18 @@ def make_discriminator(input_shape=None, demo=False):
 
     return Model(inputs=model_in, outputs=x)
 
-# we feed +1 as label for real and -1 for fake images
-# in the D, and opposite in the G.
-def EM_loss(y_true, y_pred):
-    return K.mean(y_true * y_pred)
 
-def compile_wasserstein_critic(model):
-    model.compile(loss=EM_loss,
-        optimizer=keras.optimizers.RMSprop(lr=0.00005),
-        metrics=["accuracy"])
-
-def compile_demo(model):
-    model.compile(loss=keras.losses.categorical_crossentropy,
-        optimizer=keras.optimizers.Adam(lr=1e-4, epsilon=1e-8),
-        metrics=["accuracy"])
-
+# for loading a pretrained model
 def resnet_mnist(filepath):
     from keras.datasets import mnist
-
+    # setup stuff
     (_, _), (x_test, y_test) = mnist.load_data()
     x_test = (x_test.reshape(x_test.shape[0], 28, 28, 1).astype('float32')) / 255
     y_test = keras.utils.to_categorical(y_test, num_classes=10)
     model = make_discriminator((28, 28, 1), demo=True)
+    model.compile(loss=keras.losses.categorical_crossentropy,
+                  optimizer=keras.optimizers.Adam(lr=1e-4, epsilon=1e-8),
+                  metrics=["accuracy"])
     model.load_weights(filepath, by_name=False)
     # load weights
     score = model.evaluate(x_test, y_test, verbose=1)
@@ -109,7 +98,7 @@ def resnet_mnist(filepath):
     print('Test accuracy:', score[1])
 
 
-# Example: mnist data set (digit recognition)
+# Demo training
 if __name__ == "__main__":
     from keras.datasets import mnist
 
@@ -120,17 +109,15 @@ if __name__ == "__main__":
     y_train = keras.utils.to_categorical(y_train, num_classes=10)
     model = make_discriminator((28, 28, 1), demo=True)
     # no EM as that needs to be paired with the generator
-    compile_demo(model)
-
-    tbCallBack = keras.callbacks.TensorBoard(log_dir='./log', histogram_freq=0, write_graph=True, write_images=True)
-
+    model.compile(loss=keras.losses.categorical_crossentropy,
+                  optimizer=keras.optimizers.Adam(lr=1e-4, epsilon=1e-8),
+                  metrics=["accuracy"])
 
     model.fit(x_train, y_train,
-          batch_size=128,
-          epochs=6,
-          verbose=1,
-          validation_data=(x_test, y_test),
-          callbacks=[tbCallBack])
+              batch_size=128,
+              epochs=32,
+              verbose=1,
+              validation_data=(x_test, y_test))
     score = model.evaluate(x_test, y_test, verbose=1)
     print('Test loss:', score[0])
     print('Test accuracy:', score[1])

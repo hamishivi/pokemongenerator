@@ -1,7 +1,6 @@
 '''
 Helper script for converting loss function data into usable graphs.
 '''
-import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 mpl.rcParams['pgf.rcfonts'] = False
@@ -20,11 +19,9 @@ with open('loss_baseline.txt') as f:
 plt.plot(iters, g_loss, '-b', label='discriminator loss')
 plt.plot(iters, d_loss, '-r', label='generator loss')
 
-
 plt.xlabel("iteration")
 plt.legend(loc='upper left')
 plt.title('LOSS')
 # save to file
 plt.savefig('example.pdf')
 plt.savefig('example.pgf') # for embedding as a vector graphic
-
