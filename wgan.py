@@ -17,20 +17,21 @@ matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 
 EPOCHS = 50000
-N_CRITIC = 60 #10
-batch_size = 10
+N_CRITIC = 10
+batch_size = 64
 sample_interval = 50
-image_shape = (128, 128, 3)
+image_shape_ch = (128, 128, 3)
+image_shape = (128, 128)
 
 print("Welcome to the Pokemon WGAN!")
 print("Generating images...")
 
-datagen = prepare_images("data", batch_size, (128, 128))
+datagen = prepare_images("data", batch_size, image_shape)
 
 print("Images ready. Making model...")
 
 generator = make_generator()
-discriminator = make_discriminator((128, 128, 3))
+discriminator = make_discriminator(image_shape_ch)
 compile_wasserstein_critic(discriminator)
 
 gen_in = Input(shape=(100,))
@@ -47,8 +48,8 @@ metrics=['accuracy'])
 print("Models built! Starting to train...")
 
 # labels for training
-valid = -np.ones((batch_size, 1))
-fake = np.ones((batch_size, 1))
+valid = np.ones((batch_size, 1))
+fake = -np.ones((batch_size, 1))
 
 for epoch in range(EPOCHS):
     # train discriminator
@@ -56,13 +57,13 @@ for epoch in range(EPOCHS):
     # the second iteration of the wgan paper suggests doing this
     # to help the discriminator reach convergence faster.
     if epoch < 25 or epoch % 500 == 0:
-        d_iters = 640 #100
+        d_iters = 10
     for _ in range(d_iters):
         # get real images
         imgs = next(datagen)[0]
         # if we run out of data, generate more.
         if (imgs.shape[0] != batch_size):
-            datagen = prepare_images("data", batch_size, (128, 128))
+            datagen = prepare_images("data", batch_size, image_shape)
             imgs = next(datagen)[0]
 
         # rescale -1 to 1
@@ -88,12 +89,11 @@ for epoch in range(EPOCHS):
     # train generator
     g_loss = combined.train_on_batch(noise, valid)
 
-    print("%d [D loss: %f] [G loss: %f]" % (epoch, 1 - d_loss[0], 1 - g_loss[0]))
+    print("%d [D loss: %f] [G loss: %f]" % (epoch, d_loss[0], g_loss[0]))
 
     if epoch % sample_interval == 0:
-        r, c = 2, 5
         noise = np.random.normal(-1, 1, (batch_size, 100)).astype('float32')
-        gen_imgs = generator.predict(noise, batch_size=5*5).astype('float32')
+        gen_imgs = generator.predict(noise, batch_size=batch_size).astype('float32')
         
         gen_imgs = 0.5 * (gen_imgs + 1.0)
         max_val = np.max(gen_imgs)
@@ -101,7 +101,8 @@ for epoch in range(EPOCHS):
         if max_val - 1 > 0.0001 or abs(min_val) > 0.0001:
             print(max_val, min_val, "Image max/min vals may be too small or large!!")
         gen_imgs = np.clip(gen_imgs, 0, 1)
-        fig, axs = plt.subplots(r, c)
+        r = int(np.sqrt(batch_size))
+        fig, axs = plt.subplots(r, int(batch_size/r))
         cnt = 0
         for i in axs:
             for p in i:

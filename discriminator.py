@@ -1,7 +1,7 @@
 import keras
 from keras.models import Sequential, Model
 import keras.backend as K
-from keras.layers import ZeroPadding2D, Dropout, Conv2D, Dense, Flatten, BatchNormalization, Input
+from keras.layers import ZeroPadding2D, Dropout, Conv2D, Dense, Flatten, BatchNormalization, Input, MaxPooling2D
 from keras.layers.advanced_activations import LeakyReLU
 
 
@@ -14,33 +14,32 @@ def make_discriminator(input_shape):
     model = Sequential()
 
     model.add(Conv2D(16, kernel_size=3, input_shape=input_shape, padding="same"))
-    model.add(BatchNormalization(momentum=0.8))
-    model.add(LeakyReLU(alpha=0.2))
-    model.add(Dropout(0.25))
+    model.add(BatchNormalization())
+    model.add(LeakyReLU())
 
     model.add(Conv2D(32, kernel_size=3, padding="same"))
-    model.add(BatchNormalization(momentum=0.8))
-    model.add(LeakyReLU(alpha=0.2))
+    model.add(BatchNormalization())
+    model.add(LeakyReLU(2))
+    model.add(MaxPooling2D((2,2)))
     model.add(Dropout(0.25))
 
     model.add(Conv2D(64, kernel_size=3, padding="same"))
-    model.add(BatchNormalization(momentum=0.8))
-    model.add(LeakyReLU(alpha=0.2))
-    model.add(Dropout(0.25))
+    model.add(BatchNormalization())
+    model.add(LeakyReLU())
 
     model.add(Conv2D(128, kernel_size=3, padding="same"))
-    model.add(BatchNormalization(momentum=0.8))
-    model.add(LeakyReLU(alpha=0.2))
+    model.add(BatchNormalization())
+    model.add(LeakyReLU())
+    model.add(MaxPooling2D((2,2)))
     model.add(Dropout(0.25))
 
     model.add(Conv2D(256, kernel_size=3, padding="same"))
-    model.add(BatchNormalization(momentum=0.8))
-    model.add(LeakyReLU(alpha=0.2))
-    model.add(Dropout(0.25))
+    model.add(BatchNormalization())
+    model.add(LeakyReLU())
 
     model.add(Conv2D(512, kernel_size=3, padding="same"))
-    model.add(BatchNormalization(momentum=0.8))
-    model.add(LeakyReLU(alpha=0.2))
+    model.add(BatchNormalization())
+    model.add(LeakyReLU())
     model.add(Dropout(0.25))
 
     model.add(Flatten())
