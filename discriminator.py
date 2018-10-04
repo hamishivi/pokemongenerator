@@ -10,21 +10,21 @@ from keras.layers.advanced_activations import LeakyReLU
 def make_discriminator(input_shape, demo=False):
     model = Sequential()
 
-    model.add(Conv2D(64, kernel_size=3, input_shape=input_shape, padding="same"))
-    model.add(LeakyReLU())
-    model.add(MaxPool2D(pool_size=2))
-    model.add(Dropout(0.25))
-
-    model.add(Conv2D(128, kernel_size=3, padding="same"))
+    model.add(Conv2D(64, kernel_size=(5, 5), strides=2, input_shape=input_shape, padding="same"))
     model.add(BatchNormalization())
     model.add(LeakyReLU())
     model.add(Dropout(0.25))
 
-    model.add(Conv2D(256, kernel_size=3, padding="same"))
+    model.add(Conv2D(128, kernel_size=(5, 5), strides=2, padding="same"))
+    model.add(BatchNormalization())
+    model.add(LeakyReLU())
+    model.add(Dropout(0.25))
+
+    model.add(Conv2D(256, kernel_size=(5, 5), strides=2, padding="same"))
     model.add(BatchNormalization())
     model.add(LeakyReLU())
 
-    model.add(Conv2D(512, kernel_size=3, padding="same"))
+    model.add(Conv2D(512, kernel_size=(5, 5), strides=2, padding="same"))
     model.add(BatchNormalization())
     model.add(LeakyReLU())
     model.add(Dropout(0.25))
