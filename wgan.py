@@ -19,10 +19,10 @@ def EM_loss(y_true, y_pred):
     return K.mean(y_true * y_pred)
 
 # parameters to tune
-MAX_ITERATIONS = 20000
+MAX_ITERATIONS = 50000
 N_CRITIC = 10
 BATCH_SIZE = 64
-SAMPLE_INTERVAL = 1
+SAMPLE_INTERVAL = 10
 IMAGE_SHAPE = (128, 128)
 IMAGE_SHAPE_CH = (128, 128, 3)
 LOG_FILE = 'logs/log_baseline.txt'
@@ -64,7 +64,7 @@ for epoch in range(MAX_ITERATIONS):
     # the second iteration of the wgan paper suggests doing this
     # to help the discriminator reach convergence faster.
     if epoch < 25 or epoch % 500 == 0:
-        d_iters = 1
+        d_iters = 100
     for _ in range(d_iters):
         # get real images
         imgs = next(datagen)[0]
@@ -80,7 +80,7 @@ for epoch in range(MAX_ITERATIONS):
         noise = np.random.uniform(-1.0, 1.0, size=[BATCH_SIZE, 100]).astype('float32')
         fake_imgs = generator.predict(noise)
         # train!
-        d_loss_real = np.multiply(-1, discriminator.train_on_batch(imgs, valid))
+        d_loss_real = discriminator.train_on_batch(imgs, valid)
         d_loss_fake = discriminator.train_on_batch(fake_imgs, fake)
         d_loss = np.mean(0.5 * np.add(d_loss_real, d_loss_fake))
         # clip weights
