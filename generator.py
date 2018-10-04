@@ -18,28 +18,28 @@ def make_generator(input_shape=(100,), demo=False):
     # encoder-decoder for testing
     # else just the decoder part
     if demo:
-        model.add(Conv2D(3, kernel_size=3, input_shape=input_shape, 
+        model.add(Conv2D(3, kernel_size=(5, 5), input_shape=input_shape, 
                          data_format='channels_last', padding='same'))
         model.add(BatchNormalization())
         model.add(LeakyReLU())
         model.add(MaxPooling2D())
 
-        model.add(Conv2D(32, kernel_size=3, padding='same'))
+        model.add(Conv2D(32, kernel_size=(5, 5), padding='same'))
         model.add(BatchNormalization())
         model.add(LeakyReLU())
         model.add(MaxPooling2D())
 
-        model.add(Conv2D(64, kernel_size=3, padding='same'))
+        model.add(Conv2D(64, kernel_size=(5, 5), padding='same'))
         model.add(BatchNormalization())
         model.add(LeakyReLU())
         model.add(MaxPooling2D())
 
-        model.add(Conv2D(128, kernel_size=3, padding='same'))
+        model.add(Conv2D(128, kernel_size=(5, 5), padding='same'))
         model.add(BatchNormalization())
         model.add(LeakyReLU())
         model.add(MaxPooling2D())
 
-        model.add(Conv2D(256, kernel_size=3, padding='same'))
+        model.add(Conv2D(256, kernel_size=(5, 5), padding='same'))
         model.add(BatchNormalization())
         model.add(LeakyReLU())
         model.add(MaxPooling2D())
@@ -51,27 +51,27 @@ def make_generator(input_shape=(100,), demo=False):
         model.add(LeakyReLU())
 
     model.add(UpSampling2D())
-    model.add(Conv2D(512, kernel_size=3, padding='same'))
+    model.add(Conv2D(512, kernel_size=(5, 5), padding='same'))
     model.add(BatchNormalization())
     model.add(LeakyReLU())
 
     model.add(UpSampling2D())
-    model.add(Conv2D(256, kernel_size=3, padding='same'))
+    model.add(Conv2D(256, kernel_size=(5, 5), padding='same'))
     model.add(BatchNormalization())
     model.add(LeakyReLU())
 
     model.add(UpSampling2D())
-    model.add(Conv2D(128, kernel_size=3, padding='same'))
+    model.add(Conv2D(128, kernel_size=(5, 5), padding='same'))
     model.add(BatchNormalization())
     model.add(LeakyReLU())
 
     model.add(UpSampling2D())
-    model.add(Conv2D(64, kernel_size=3, padding='same'))
+    model.add(Conv2D(64, kernel_size=(5, 5), padding='same'))
     model.add(BatchNormalization())
     model.add(LeakyReLU())
 
     model.add(UpSampling2D())
-    model.add(Conv2D(3, kernel_size=3, padding='same', data_format='channels_last'))
+    model.add(Conv2D(3, kernel_size=(5, 5), padding='same', data_format='channels_last'))
     if __name__ == '__main__':
         model.add(Activation("softmax"))
     else:
