@@ -4,41 +4,28 @@ Baseline discriminator, a straightforward ConvNet.
 import keras
 from keras.utils import plot_model
 from keras.models import Sequential, Model
-from keras.layers import Dropout, Conv2D, Dense, Flatten, BatchNormalization, Input, MaxPooling2D
+from keras.layers import Dropout, Conv2D, Dense, Flatten, BatchNormalization, Input, MaxPool2D
 from keras.layers.advanced_activations import LeakyReLU
 
 def make_discriminator(input_shape, demo=False):
     model = Sequential()
 
-    model.add(Conv2D(16, kernel_size=3, input_shape=input_shape, padding="same"))
-    model.add(BatchNormalization())
+    model.add(Conv2D(64, kernel_size=3, input_shape=input_shape, padding="same"))
     model.add(LeakyReLU())
-
-    model.add(Conv2D(32, kernel_size=3, padding="same"))
-    model.add(BatchNormalization())
-    model.add(LeakyReLU())
-    model.add(MaxPooling2D())
+    model.add(MaxPool2D(pool_size=2))
     model.add(Dropout(0.25))
-
-    model.add(Conv2D(64, kernel_size=3, padding="same"))
-    model.add(BatchNormalization())
-    model.add(MaxPooling2D(pool_size=1))
-    model.add(LeakyReLU())
 
     model.add(Conv2D(128, kernel_size=3, padding="same"))
     model.add(BatchNormalization())
-    model.add(MaxPooling2D())
     model.add(LeakyReLU())
     model.add(Dropout(0.25))
 
     model.add(Conv2D(256, kernel_size=3, padding="same"))
     model.add(BatchNormalization())
-    model.add(MaxPooling2D(pool_size=1))
     model.add(LeakyReLU())
 
     model.add(Conv2D(512, kernel_size=3, padding="same"))
     model.add(BatchNormalization())
-    model.add(MaxPooling2D(pool_size=1))
     model.add(LeakyReLU())
     model.add(Dropout(0.25))
 

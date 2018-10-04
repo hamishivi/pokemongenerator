@@ -46,9 +46,14 @@ def make_generator(input_shape=(100,), demo=False):
     else:
         # takes in 100dim noise vector as seed
         model.add(Dense(4 * 4 * 512, input_dim=100, name='input'))
+        model.add(Reshape((4, 4, 512)))
         model.add(BatchNormalization())
         model.add(LeakyReLU())
-        model.add(Reshape((4, 4, 512)))
+
+    model.add(UpSampling2D())
+    model.add(Conv2D(512, kernel_size=3, padding='same'))
+    model.add(BatchNormalization())
+    model.add(LeakyReLU())
 
     model.add(UpSampling2D())
     model.add(Conv2D(256, kernel_size=3, padding='same'))
@@ -62,11 +67,6 @@ def make_generator(input_shape=(100,), demo=False):
 
     model.add(UpSampling2D())
     model.add(Conv2D(64, kernel_size=3, padding='same'))
-    model.add(BatchNormalization())
-    model.add(LeakyReLU())
-
-    model.add(UpSampling2D())
-    model.add(Conv2D(32, kernel_size=3, padding='same'))
     model.add(BatchNormalization())
     model.add(LeakyReLU())
 

@@ -19,10 +19,10 @@ def EM_loss(y_true, y_pred):
     return K.mean(y_true * y_pred)
 
 # parameters to tune
-EPOCHS = 20000
+MAX_ITERATIONS = 20000
 N_CRITIC = 10
 BATCH_SIZE = 64
-SAMPLE_INTERVAL = 50
+SAMPLE_INTERVAL = 1
 IMAGE_SHAPE = (128, 128)
 IMAGE_SHAPE_CH = (128, 128, 3)
 LOG_FILE = 'logs/log_baseline.txt'
@@ -59,12 +59,12 @@ print("WGAN built! Starting to train...")
 valid = -np.ones((BATCH_SIZE, 1))
 fake = np.ones((BATCH_SIZE, 1))
 
-for epoch in range(EPOCHS):
+for epoch in range(MAX_ITERATIONS):
     d_iters = N_CRITIC
     # the second iteration of the wgan paper suggests doing this
     # to help the discriminator reach convergence faster.
     if epoch < 25 or epoch % 500 == 0:
-        d_iters = 100
+        d_iters = 1
     for _ in range(d_iters):
         # get real images
         imgs = next(datagen)[0]
@@ -80,9 +80,9 @@ for epoch in range(EPOCHS):
         noise = np.random.uniform(-1.0, 1.0, size=[BATCH_SIZE, 100]).astype('float32')
         fake_imgs = generator.predict(noise)
         # train!
-        d_loss_real = discriminator.train_on_batch(imgs, valid)
+        d_loss_real = np.multiply(-1, discriminator.train_on_batch(imgs, valid))
         d_loss_fake = discriminator.train_on_batch(fake_imgs, fake)
-        d_loss = 0.5 * np.add(d_loss_fake, d_loss_real)
+        d_loss = np.mean(0.5 * np.add(d_loss_real, d_loss_fake))
         # clip weights
         for layer in discriminator.layers:
             weights = layer.get_weights()
@@ -92,22 +92,22 @@ for epoch in range(EPOCHS):
         print(".", end="", flush=True)
 
     # train generator
-    g_loss = combined.train_on_batch(noise, valid)
+    g_loss = np.mean(combined.train_on_batch(noise, valid))
 
     # end of iteration: record loss
-    print("%d [D loss: %f] [G loss: %f]" % (epoch, 1 - d_loss[0], 1 - g_loss[0]))
+    print("%d [D loss: %f] [G loss: %f]" % (epoch, d_loss, g_loss))
     # we also record it in a file
     with open(LOG_FILE, 'a+') as f:
-        f.write('%d %f %f\n' % (epoch, 1 - d_loss[0], 1 - g_loss[0]))
+        f.write('%d %f %f\n' % (epoch, d_loss, g_loss))
 
     if epoch % SAMPLE_INTERVAL == 0:
-        noise = np.random.normal(-1, 1, (BATCH_SIZE, 100)).astype('float32')
-        gen_imgs = generator.predict(noise, batch_size=BATCH_SIZE).astype('float32')
+        noise = np.random.normal(-1, 1, (25, 100)).astype('float32')
+        gen_imgs = generator.predict(noise, batch_size=25).astype('float32')
 
         gen_imgs = 0.5 * (gen_imgs + 1.0)
         gen_imgs = np.clip(gen_imgs, 0, 1)
 
-        fig, axs = plt.subplots(int(np.sqrt(BATCH_SIZE)), int(np.sqrt(BATCH_SIZE)))
+        fig, axs = plt.subplots(5, 5)
         cnt = 0
         for i in axs:
             for p in i:
