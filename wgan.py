@@ -3,6 +3,9 @@ Main file that actually runs the WGAN training algorithm
 and brings together all the models.
 '''
 import numpy as np
+import matplotlib
+# for server running
+matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 
 import keras
@@ -22,7 +25,7 @@ def EM_loss(y_true, y_pred):
 MAX_ITERATIONS = 50000
 N_CRITIC = 10
 BATCH_SIZE = 64
-SAMPLE_INTERVAL = 10
+SAMPLE_INTERVAL = 50
 IMAGE_SHAPE = (128, 128)
 IMAGE_SHAPE_CH = (128, 128, 3)
 LOG_FILE = 'logs/log_baseline.txt'
