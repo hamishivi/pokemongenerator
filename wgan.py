@@ -28,7 +28,7 @@ BATCH_SIZE = 64
 SAMPLE_INTERVAL = 50
 IMAGE_SHAPE = (128, 128)
 IMAGE_SHAPE_CH = (128, 128, 3)
-LOG_FILE = 'logs/log_baseline.txt'
+LOG_FILE = 'logs/testing_baseline.txt'
 
 print("Welcome to the Pokemon WGAN!")
 print("Preparing images...")
@@ -117,7 +117,7 @@ for epoch in range(MAX_ITERATIONS):
                 p.imshow(gen_imgs[cnt, :, :, :])
                 p.axis("off")
                 cnt += 1
-        fig.savefig("updischalfgen_images/pokemon_" + str(epoch) + ".png")
+        fig.savefig("testing_images/pokemon_" + str(epoch) + ".png")
         fig.clear()
         # also save model at checkpoints
         combined.save('pokemon_wgan_combined_model.h5')
