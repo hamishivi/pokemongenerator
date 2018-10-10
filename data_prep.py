@@ -24,6 +24,7 @@ def prepare_images(directory, batch_size, target_size, save=False):
     else:
         train_generator = train_datagen.flow_from_directory(
             directory,
+            classes=['pokemon'],
             target_size=target_size,
             batch_size=batch_size,
             shuffle=True)

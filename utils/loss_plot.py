@@ -9,7 +9,7 @@ iters = []
 d_loss = []
 g_loss = []
 
-with open('loss_baseline.txt') as f:
+with open('logs/testing_baseline.txt') as f:
     for line in f:
         words = line.split(' ')
         iters.append(int(words[0]))
@@ -24,4 +24,3 @@ plt.legend(loc='upper left')
 plt.title('LOSS')
 # save to file
 plt.savefig('example.pdf')
-plt.savefig('example.pgf') # for embedding as a vector graphic
