@@ -175,7 +175,7 @@ Below I graph the loss values for the generators of each WGAN:
 
 Below I graph the loss values for the discriminators of each WGAN:
 
-Below are the images produced by each WGAN after 20,000 iterations:
+Below are the images produced by each WGAN after 10,000 iterations:
 
 As we can see...
 
@@ -192,7 +192,7 @@ Below I graph the loss values for the generators of each setup:
 
 Below I graph the loss values for the discriminators of each setup:
 
-Below are the images produced by each setup after 20,000 iterations:
+Below are the images produced by each setup after 10,000 iterations:
 
 As we can see...
 

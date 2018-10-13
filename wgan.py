@@ -15,7 +15,7 @@ from keras.layers import Input
 
 # import models
 from discriminator import make_discriminator
-from generator import make_generator
+from alt_gen import make_alt_generator
 from data_prep import prepare_images
 
 def EM_loss(y_true, y_pred):
@@ -28,7 +28,7 @@ BATCH_SIZE = 64
 SAMPLE_INTERVAL = 50
 IMAGE_SHAPE = (128, 128)
 IMAGE_SHAPE_CH = (128, 128, 3)
-LOG_FILE = 'logs/testing_baseline.txt'
+LOG_FILE = 'logs/basedisc_basegen_logs.txt'
 
 print("Welcome to the Pokemon WGAN!")
 print("Preparing images...")
@@ -39,7 +39,7 @@ datagen = prepare_images("data", BATCH_SIZE, IMAGE_SHAPE)
 print("Images prepped. Making WGAN...")
 
 # make our models
-generator = make_generator()
+generator = make_alt_generator()
 discriminator = make_discriminator(IMAGE_SHAPE_CH)
 discriminator.compile(loss=EM_loss,
                       optimizer=keras.optimizers.RMSprop(lr=0.00005),
@@ -117,12 +117,12 @@ for epoch in range(MAX_ITERATIONS):
                 p.imshow(gen_imgs[cnt, :, :, :])
                 p.axis("off")
                 cnt += 1
-        fig.savefig("testing_images/pokemon_" + str(epoch) + ".png")
+        fig.savefig("basedisc_basegen_images/pokemon_" + str(epoch) + ".png")
         fig.clear()
         # also save model at checkpoints
-        combined.save('pokemon_wgan_combined_model.h5')
-        discriminator.save('pokemon_wgan_critic_model.h5')
-        generator.save('pokemon_wgan_generator_model.h5')
+        combined.save('weights/basedisc_basegen_combined_model.h5')
+        discriminator.save('weights/basedisc_basegen_critic_model.h5')
+        generator.save('weights/basedisc_basegen_generator_model.h5')
 
 print('training complete, saving model...')
 combined.save('pokemon_wgan_combined_model.h5')
