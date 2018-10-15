@@ -7,13 +7,13 @@ from keras.utils import plot_model
 from keras.models import Model
 from keras.layers import Dense, Input, GlobalAveragePooling2D
 from keras.layers.advanced_activations import LeakyReLU
-from keras.applications import inception_resnet_v2
+from keras.applications import nasnet
 
 def make_discriminator(input_shape=None, demo=False):
     model_in = Input(shape=input_shape, name='input')
-    resnet = inception_resnet_v2.InceptionResNetV2(input_tensor=model_in, include_top=False, pooling='avg')
-    x = resnet.output
-    # just pass through dense
+    nas = nasnet.NASNetMobile(input_tensor=model_in, include_top=False, pooling='avg')
+    x = nas.output
+    # just pass through dense for reshaping discriminator weights
     x = Dense(1024, activation='relu')(x)
     if demo:
         x = Dense(10, activation='softmax', name='output')(x)
