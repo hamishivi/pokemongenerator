@@ -1,7 +1,8 @@
 """
 Script to move the segmentation dataset I used
 into appropriate folders, ordered correctly. Used to
-make keras training easier.
+make keras training easier. Probably not useful beyond
+my personal setup.
 """
 import os
 

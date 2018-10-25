@@ -2,9 +2,8 @@
 Baseline discriminator, a straightforward ConvNet.
 '''
 import keras
-from keras.utils import plot_model
 from keras.models import Sequential, Model
-from keras.layers import Dropout, Conv2D, Dense, Flatten, BatchNormalization, Input, MaxPool2D
+from keras.layers import Dropout, Conv2D, Dense, Flatten, BatchNormalization, Input
 from keras.layers.advanced_activations import LeakyReLU
 
 def make_discriminator(input_shape, demo=False):
@@ -73,7 +72,7 @@ if __name__ == "__main__":
 
     model.fit(x_train, y_train,
               batch_size=128,
-              epochs=6,
+              epochs=12,
               verbose=1,
               validation_data=(x_test, y_test))
     score = model.evaluate(x_test, y_test, verbose=1)

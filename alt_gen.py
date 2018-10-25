@@ -2,7 +2,8 @@
 A alternate generator setup, using transpose layers instead of
 upsampling. I tested on a semantic segmentation dataset, and so
 for that also add an encoder block that mirrors the decoder block
-(that forms the generator in the actual WGAN).
+(that forms the generator in the actual WGAN). This was the baseline
+generator model used in the report.
 """
 import keras
 from keras.utils import plot_model
@@ -69,7 +70,10 @@ def make_alt_generator(input_shape=(100,), demo=False):
     model.add(LeakyReLU())
 
     model.add(Conv2DTranspose(3, kernel_size=5, padding='same'))
-    model.add(Activation("tanh", name='output'))
+    if demo:
+        model.add(Activation("softmax"))
+    else:
+        model.add(Activation('tanh', name='output'))
 
     noise = Input(shape=input_shape)
     img = model(noise)
@@ -109,12 +113,13 @@ def ad20k_alt(filepath):
     model.compile(loss=keras.losses.categorical_crossentropy,
                   optimizer=keras.optimizers.SGD(lr=0.001, momentum=0.9),
                   metrics=["accuracy"])
-    # evaluate
     model.load_weights(filepath, by_name=False)
-    test_datagen = get_demo_data('segmentation_dataset/images/test/')
-    score = model.evaluate_generator(test_datagen, steps=14, verbose=1)
-    print('Test loss:', score[0])
-    print('Test accuracy:', score[1])
+    # show example
+    test_example = next(get_demo_data('segmentation_dataset/images/test/'))
+    raw = test_example[0][0]
+    # normalise down to [0,1] range
+    raw = raw/255.0
+    return raw, model.predict(test_example[0], batch_size=128)[0]
 
 
 if __name__ == '__main__':
@@ -131,4 +136,6 @@ if __name__ == '__main__':
                             validation_steps=14)
     # evaluate
     test_datagen = get_demo_data('segmentation_dataset/images/test/')
-    generator.evaluate_generator(test_datagen, steps=14, verbose=1)
+    score = generator.evaluate_generator(test_datagen, steps=14, verbose=1)
+    print('Test loss:', score[0])
+    print('Test accuracy:', score[1])

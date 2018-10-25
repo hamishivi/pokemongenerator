@@ -9,7 +9,7 @@ iters = []
 d_loss = []
 g_loss = []
 
-with open('logs/testing_baseline.txt') as f:
+with open('logs/nasnet_logs.txt') as f:
     for line in f:
         words = line.split(' ')
         iters.append(int(words[0]))
@@ -20,7 +20,7 @@ plt.plot(iters, g_loss, '-b', label='discriminator loss')
 plt.plot(iters, d_loss, '-r', label='generator loss')
 
 plt.xlabel("iteration")
-plt.legend(loc='upper left')
-plt.title('LOSS')
+plt.legend(loc='lower right')
+plt.title('NasNet Mobile loss')
 # save to file
-plt.savefig('example.pdf')
+plt.savefig('report_images/nasnet_loss.pdf')

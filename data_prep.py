@@ -17,6 +17,7 @@ def prepare_images(directory, batch_size, target_size, save=False):
     if save:
         train_generator = train_datagen.flow_from_directory(
             directory,
+            classes=['pokemon'],
             target_size=target_size,
             batch_size=batch_size,
             shuffle=True,
@@ -39,9 +40,5 @@ if __name__ == "__main__":
     # create generate
     datagen = prepare_images("data", 64, (150, 150), save=True)
     # iterate through a bit to generate them
-    count = 0
-    for item in datagen:
-        count += 1
-        if count >= 5:
-            break
+    next(datagen)
     print("Done generating images!")

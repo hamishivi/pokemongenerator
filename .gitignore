@@ -111,3 +111,6 @@ log/
 segmentation_dataset/
 testwgan.py
 images_128_first
+logs/
+submission/
+weights/

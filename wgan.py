@@ -1,7 +1,10 @@
 '''
 Main file that actually runs the WGAN training algorithm
-and brings together all the models.
+and brings together all the models. This was loosely based on
+https://github.com/eriklindernoren/Keras-GAN/blob/master/wgan/wgan.py
+but I have changed many elements of it.
 '''
+import os
 import numpy as np
 import matplotlib
 # for server running
@@ -13,22 +16,26 @@ from keras.models import Model
 import keras.backend as K
 from keras.layers import Input
 
-# import models
+# import models - change me to change models used
 from discriminator import make_discriminator
-from alt_gen import make_alt_generator
+from generator import make_generator
 from data_prep import prepare_images
 
 def EM_loss(y_true, y_pred):
     return K.mean(y_true * y_pred)
 
 # parameters to tune
-MAX_ITERATIONS = 50000
+MAX_ITERATIONS = 10000
 N_CRITIC = 10
 BATCH_SIZE = 64
 SAMPLE_INTERVAL = 50
 IMAGE_SHAPE = (128, 128)
 IMAGE_SHAPE_CH = (128, 128, 3)
-LOG_FILE = 'logs/basedisc_basegen_logs.txt'
+LOG_FILE = 'logs/dummy_logs.txt'
+CRITIC_WEIGHTS_SAVE_LOC = 'weights/dummy_critic.hdf5'
+GENERATOR_WEIGHTS_SAVE_LOC = 'weights/dummy_generator.hdf5'
+# make sure this folder exists, or the training will error out.
+IMAGES_SAVE_DIR = 'results'
 
 print("Welcome to the Pokemon WGAN!")
 print("Preparing images...")
@@ -39,7 +46,7 @@ datagen = prepare_images("data", BATCH_SIZE, IMAGE_SHAPE)
 print("Images prepped. Making WGAN...")
 
 # make our models
-generator = make_alt_generator()
+generator = make_generator()
 discriminator = make_discriminator(IMAGE_SHAPE_CH)
 discriminator.compile(loss=EM_loss,
                       optimizer=keras.optimizers.RMSprop(lr=0.00005),
@@ -67,7 +74,7 @@ for epoch in range(MAX_ITERATIONS):
     # the second iteration of the wgan paper suggests doing this
     # to help the discriminator reach convergence faster.
     if epoch < 25 or epoch % 500 == 0:
-        d_iters = 100
+        d_iters = 1
     for _ in range(d_iters):
         # get real images
         imgs = next(datagen)[0]
@@ -117,14 +124,8 @@ for epoch in range(MAX_ITERATIONS):
                 p.imshow(gen_imgs[cnt, :, :, :])
                 p.axis("off")
                 cnt += 1
-        fig.savefig("basedisc_basegen_images/pokemon_" + str(epoch) + ".png")
+        fig.savefig(os.path.join(IMAGES_SAVE_DIR, "pokemon_" + str(epoch) + ".png"))
         fig.clear()
         # also save model at checkpoints
-        combined.save('weights/basedisc_basegen_combined_model.h5')
-        discriminator.save('weights/basedisc_basegen_critic_model.h5')
-        generator.save('weights/basedisc_basegen_generator_model.h5')
-
-print('training complete, saving model...')
-combined.save('pokemon_wgan_combined_model.h5')
-discriminator.save('pokemon_wgan_critic_model.h5')
-generator.save('pokemon_wgan_generator_model.h5')
+        discriminator.save(CRITIC_WEIGHTS_SAVE_LOC)
+        generator.save(GENERATOR_WEIGHTS_SAVE_LOC)
