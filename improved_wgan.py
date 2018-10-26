@@ -13,8 +13,8 @@ from functools import partial
 
 import keras.backend as K
 
-from data_prep import prepare_images
-from generator import make_generator
+from data_prep import prepare_cifar10
+from generator import make_small_generator
 from discriminator import make_discriminator
 
 import matplotlib.pyplot as plt
@@ -28,8 +28,8 @@ MAX_ITERATIONS = 10000
 N_CRITIC = 5
 BATCH_SIZE = 32
 SAMPLE_INTERVAL = 50
-IMAGE_SHAPE = (128, 128)
-IMAGE_SHAPE_CH = (128, 128, 3)
+IMAGE_SHAPE = (32, 32)
+IMAGE_SHAPE_CH = (32, 32, 3)
 LOG_FILE = 'logs/imp_wgan_dummy_logs.txt'
 CRITIC_WEIGHTS_SAVE_LOC = 'weights/imp_wgan_dummy_critic.h5'
 GENERATOR_WEIGHTS_SAVE_LOC = 'weights/imp_wgan_dummy_gen.h5'
@@ -73,7 +73,7 @@ def sample_images(epoch):
             axs[i,j].imshow(gen_imgs[cnt, :,:,:])
             axs[i,j].axis('off')
             cnt += 1
-    fig.savefig(os.path.join(IMAGES_SAVE_DIR, "pokemon_%d.png" % epoch))
+    fig.savefig(os.path.join(IMAGES_SAVE_DIR, "cifar_%d.png" % epoch))
     plt.close()
 
 def wasserstein_loss(y_true, y_pred):
@@ -81,7 +81,7 @@ def wasserstein_loss(y_true, y_pred):
 
 optimizer = Adam(0.0001, beta_1=0.5, beta_2=0.9)
 # Build the generator and critic
-generator = make_generator()
+generator = make_small_generator()
 critic = make_discriminator(IMAGE_SHAPE_CH)
 
 # Freeze generator's layers while training critic
@@ -128,7 +128,7 @@ generator_model = Model(z_gen, valid)
 generator_model.compile(loss=wasserstein_loss, optimizer=optimizer)
 
 # Load the dataset
-datagen = prepare_images("data", BATCH_SIZE, IMAGE_SHAPE)
+datagen = prepare_cifar10(BATCH_SIZE)
 # Adversarial ground truths
 valid = -np.ones((BATCH_SIZE, 1))
 fake =  np.ones((BATCH_SIZE, 1))
@@ -139,7 +139,7 @@ for epoch in range(MAX_ITERATIONS):
         imgs = next(datagen)[0]
         # if we run out of data, generate more.
         if imgs.shape[0] != BATCH_SIZE:
-            datagen = prepare_images("data", BATCH_SIZE, IMAGE_SHAPE)
+            datagen = prepare_cifar10(BATCH_SIZE)
             imgs = next(datagen)[0]
         imgs = (imgs.astype(np.float32) - 0.5) * 2.0
         # Sample generator input

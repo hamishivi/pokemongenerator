@@ -4,6 +4,7 @@ data augmentation.
 '''
 import os
 from keras.preprocessing.image import ImageDataGenerator
+from keras.datasets import cifar10
 
 def prepare_images(directory, batch_size, target_size, save=False):
     train_datagen = ImageDataGenerator(
@@ -31,6 +32,15 @@ def prepare_images(directory, batch_size, target_size, save=False):
             shuffle=True)
 
     return train_generator
+
+# for cifar experiments
+# cifar images are 32x32x3, be sure to take that into account
+def prepare_cifar10(batch_size):
+    print('loading CIFAR-10 dataset')
+    (x_train, _), (_, _) = cifar10.load_data()
+    for i in range(x_train.shape[0] // batch_size):
+        # dummy second value to make it match the other generator
+        yield (x_train[batch_size*i:batch_size*(i+1)], 0)
 
 if __name__ == "__main__":
     print("Generating demo images...")
