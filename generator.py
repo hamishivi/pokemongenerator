@@ -83,7 +83,7 @@ def make_generator(input_shape=(100,), demo=False):
     return Model(noise, img)
 
 # for cifar-10
-def make_small_generator(input_shape=(100,)):
+def make_cifar_generator(input_shape=(100,)):
     model = Sequential()
     # takes in 100dim noise vector as seed
     model.add(Dense(4 * 4 * 512, input_dim=100, name='input'))

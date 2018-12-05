@@ -13,13 +13,15 @@ from functools import partial
 
 import keras.backend as K
 
-from data_prep import prepare_mnist
+from data_prep import prepare_images, prepare_mnist, prepare_cifar10
 from alt_gen import make_mnist_generator
+from generator import make_generator, make_cifar_generator
 from discriminator import make_discriminator
 
 import matplotlib.pyplot as plt
 
 import os
+import sys
 
 import numpy as np
 
@@ -28,16 +30,21 @@ MAX_ITERATIONS = 20000
 N_CRITIC = 5
 BATCH_SIZE = 64
 SAMPLE_INTERVAL = 50
-IMAGE_SHAPE = (28, 28)
-IMAGE_SHAPE_CH = (28, 28, 1)
-LOG_FILE = 'logs/imp_wgan_mnist.txt'
-CRITIC_WEIGHTS_SAVE_LOC = 'weights/imp_wgan_mnist_critic.h5'
-GENERATOR_WEIGHTS_SAVE_LOC = 'weights/imp_wgan_mnist_gen.h5'
+LOG_FILE = 'logs/dummy_logs.txt'
+CRITIC_WEIGHTS_SAVE_LOC = 'weights/imp_wgan_dummy_critic.h5'
+GENERATOR_WEIGHTS_SAVE_LOC = 'weights/imp_wgan_dummy_gen.h5'
 # the below should be a folder
 IMAGES_SAVE_DIR = "results"
 GRADIENT_PENALTY_WEIGHT = 10
 
 CONST_NOISE = np.random.normal(0, 1, (25, 100))
+
+mode = 'pokemon'
+if len(sys.argv) > 1:
+    if sys.argv[1] == 'mnist':
+        mode = 'mnist'
+    elif sys.argv[1] == 'cifar':
+        mode = 'cifar'
 
 class RandomWeightedAverage(_Merge):
     """Provides a (random) weighted average between real and generated image samples"""
@@ -89,15 +96,24 @@ def mean_loss(y_true, y_pred):
 
 optimizer = Adam(0.0001, beta_1=0.5, beta_2=0.9)
 # Build the generator and critic
-generator = make_mnist_generator()
-critic = make_discriminator(IMAGE_SHAPE_CH, batchnorm=False)
+generator = make_generator()
+image_shape = (128, 128, 3)
+if mode == 'mnist':
+    generator = make_mnist_generator()
+    image_shape = (28, 28, 1)
+elif mode == 'cifar':
+    generator = make_cifar_generator()
+    image_shape = (32, 32, 3)
+
+# we currently use the same discriminator across all
+critic = make_discriminator(image_shape)
 
 # Freeze generator's layers while training critic
 generator.trainable = False
 for l in generator.layers:
     l.trainable = False
 # Image input (real sample)
-real_img = Input(shape=IMAGE_SHAPE_CH)
+real_img = Input(shape=image_shape)
 # Noise input
 z_disc = Input(shape=(100,))
 # Generate image based of noise (fake sample)
@@ -145,7 +161,13 @@ with open(LOG_FILE, 'w') as f:
     f.write("")
 
 # Load the dataset
-datagen = prepare_mnist(BATCH_SIZE)
+prepare_function = prepare_images
+if mode == 'mnist':
+    prepare_function = prepare_mnist
+elif mode == 'cifar':
+    prepare_function = prepare_cifar10
+
+datagen = prepare_function(BATCH_SIZE)
 # Adversarial ground truths
 valid = np.ones((BATCH_SIZE, 1), dtype=np.float32)
 fake = -valid
@@ -158,11 +180,11 @@ for epoch in range(MAX_ITERATIONS+1):
         try:
             imgs = next(datagen)[0]
         except StopIteration:
-            datagen = prepare_mnist(BATCH_SIZE)
+            datagen = prepare_function(BATCH_SIZE)
             imgs = next(datagen)[0]
         # if we run out of data, generate more.
         if imgs.shape[0] != BATCH_SIZE:
-            datagen = prepare_mnist(BATCH_SIZE)
+            datagen = prepare_function(BATCH_SIZE)
             imgs = next(datagen)[0]
 
         imgs = (imgs.astype(np.float32) - 0.5) * 2.0
@@ -183,10 +205,10 @@ for epoch in range(MAX_ITERATIONS+1):
 
     # If at save interval => save generated image samples
     if epoch % SAMPLE_INTERVAL == 0:
-        sample_images(generator, epoch, CONST_NOISE, IMAGES_SAVE_DIR, greyscale=True)
+        sample_images(generator, epoch, CONST_NOISE, IMAGES_SAVE_DIR, greyscale=(mode == 'mnist'))
         critic.save_weights(CRITIC_WEIGHTS_SAVE_LOC)
         generator.save_weights(GENERATOR_WEIGHTS_SAVE_LOC)
 
-sample_images(generator, MAX_ITERATIONS, CONST_NOISE, IMAGES_SAVE_DIR, greyscale=True)
+sample_images(generator, MAX_ITERATIONS, CONST_NOISE, IMAGES_SAVE_DIR, greyscale=(mode == 'mnist'))
 critic.save_weights(CRITIC_WEIGHTS_SAVE_LOC)
 generator.save_weights(GENERATOR_WEIGHTS_SAVE_LOC)

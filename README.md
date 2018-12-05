@@ -1,7 +1,5 @@
 # Pokemon Generator
 
-PLEASE README BEFORE LOOKING AT CODE: THIS EXPLAINS IMPORTANT SETUP STEPS AND EXPLAINS THE STRUCTURE OF THIS CODEBASE.
-
 ![Generated Pokemon](./report_images/wgan_gp_image.png)
 
 *An example of generated pokemon*
@@ -14,13 +12,17 @@ This is the codebase for my COMP3419 assignment, to generate pokemon with WGANs.
 
 I'd highly recommend using GPU training if you can - it vastly speeds up training, and making results a matter of days instead of a matter of hours.
 
-Before running any code, you also need to download and correctly preprocess the datasets I used. Keras automatically handles downloading the MNIST dataset, so you don't need to worry about that. For the AD20K dataset, used for testing semantic segmentation, please download it from [here](https://groups.csail.mit.edu/vision/datasets/ADE20K/). You will then have to reformat the layout of this dataset: place it into a folder called ```segmentation_dataset``` with one subfolder: ```images```. Inside ```images``` There should be 3 folders: ```masks```, which contains all segmentation masks of the training set in order; ```raws```, which contains all raw images of the dataset in order; ```test```, which again contains two folders,  ```raws``` and ```masks```, which contains the raw images and segmentation masks of the test dataset respectively. Look at ```utils/data_move.py``` for some help in doing this in code. Finally, download the Sugimori art dataset from [veekun](https://veekun.com/static/pokedex/downloads/pokemon-sugimori.tar.gz), and place this in a folder called ```data/pokemon```. You will also have to convert all these images from RGBA to RGB - look at ```utils/rgba_to_rgb.py``` for help with this. Once these datasets are correctly downloaded and sorted, you should be able to run the demo and training programs without issues.
+Before running any code, you also need to download and correctly preprocess the datasets I used. Keras automatically handles downloading the MNIST and CIFAR datasets, so you don't need to worry about that. For the AD20K dataset, used for testing semantic segmentation, please download it from [here](https://groups.csail.mit.edu/vision/datasets/ADE20K/). You will then have to reformat the layout of this dataset: place it into a folder called ```segmentation_dataset``` with one subfolder: ```images```. Inside ```images``` There should be 3 folders: ```masks```, which contains all segmentation masks of the training set in order; ```raws```, which contains all raw images of the dataset in order; ```test```, which again contains two folders,  ```raws``` and ```masks```, which contains the raw images and segmentation masks of the test dataset respectively. Look at ```utils/data_move.py``` for some help in doing this in code. Finally, download the Sugimori art dataset from [veekun](https://veekun.com/static/pokedex/downloads/pokemon-sugimori.tar.gz), and place this in a folder called ```data/pokemon```. You will also have to convert all these images from RGBA to RGB - look at ```utils/rgba_to_rgb.py``` for help with this. Once these datasets are correctly downloaded and sorted, you should be able to run the demo and training programs without issues.
 
 If you just want to see results, please run ```demo.py```. Otherwise, check ```wgan.py``` and ```improved_wgan.py``` for the training code. In particular, both import functions to create generator and discriminator models. By changing the function used, you can change the WGAN configuration. Other changeable parameters are listed in the top of the files, in capitals. Ensure that all directories arftifacts are saved into exist, otherwise there will be errors when running the code.
 
 Note that Keras will warn about a "discrepancy between trainable weights and collected trainable weights" - please ignore this as this error is intended for users who do not need to reuse models in different setups with different trainable layers, as is the case with GANs.
 
 Note no video was included in my submission as [this](https://edstem.org/courses/2893/discussion/111135) Ed post indicated it was not necessary.
+
+## Various Configurations Used
+
+The various configurations of the WGAN-GP (which gave the best results) can be used by specifying them when calling ```python improved_wgan.py``` - use ```python improved_wgan.py mnist``` for generating the MNIST digits, and ```python improved_wgan.py cifar``` for generating the CIFAR-10 images. Otherwise, the pokemon configuration will be used.
 
 ## Code overview
 
