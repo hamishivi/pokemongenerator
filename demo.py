@@ -8,7 +8,7 @@ from matplotlib import pyplot as plt
 from discriminator import mnist
 from resnet_disc import resnet_mnist
 from generator import ad20k, make_generator
-from alt_gen import ad20k_alt, make_alt_generator
+from alt_gen import ad20k_alt, make_alt_generator, make_mnist_generator
 
 print("Showcasing performance on test problems")
 print("MNIST DATASET TEST")
@@ -45,7 +45,7 @@ plt.axis("off")
 plt.suptitle('Improved Generator Segmentation')
 plt.show()
 
-def pretrained_model_demo(build_generator_func, weight_filepath, name):
+def pretrained_model_demo(build_generator_func, weight_filepath, name, greyscale=False):
     generator = build_generator_func()
     generator.load_weights(weight_filepath, by_name=False, skip_mismatch=True)
     noise = np.random.normal(0, 1, (25, 100)).astype('float32')
@@ -56,7 +56,10 @@ def pretrained_model_demo(build_generator_func, weight_filepath, name):
     cnt = 0
     for i in axs:
         for p in i:
-            p.imshow(gen_imgs[cnt, :, :, :])
+            if greyscale:
+                p.imshow(gen_imgs[cnt, :, :, 0], cmap='gray')
+            else:
+                p.imshow(gen_imgs[cnt, :, :, :])
             p.axis("off")
             cnt += 1
     print('displaying', name)
@@ -83,5 +86,9 @@ pretrained_model_demo(make_generator, 'weights/crop_only_generator_model.h5', 'z
 # then wgan gp
 print("\nwgan-gp with baseline discriminator and improved generator:")
 pretrained_model_demo(make_generator, 'weights/improved_up_gen.h5', 'WGAN-GP')
+
+print("BONUS DEMOS")
+print("\nmnist wgan-gp results:")
+pretrained_model_demo(make_mnist_generator, 'weights/imp_wgan_mnist_gen.h5', 'MNIST', greyscale=True)
 
 print("Demo complete!")

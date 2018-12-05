@@ -6,6 +6,10 @@ PLEASE README BEFORE LOOKING AT CODE: THIS EXPLAINS IMPORTANT SETUP STEPS AND EX
 
 *An example of generated pokemon*
 
+![Generated MNIST Digits](./report_images/mnist_wgan_gp.png)
+
+*An example of MNIST style digits generated using the wgan-gp*
+
 This is the codebase for my COMP3419 assignment, to generate pokemon with WGANs. To install all dependencies, simply run ```pip install -r requirements.txt```. However, if you wish to use GPU training, please remove tensorflow from the dependencies list in ```requirements.txt``` and install tensorflow-gpu on your own. To make sure you can run the WGAN-GP training, which requires second order gradients in some cases, ensure you have the latest versions of CUDnn and tensorflow-gpu installed.
 
 I'd highly recommend using GPU training if you can - it vastly speeds up training, and making results a matter of days instead of a matter of hours.

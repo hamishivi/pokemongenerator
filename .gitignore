@@ -113,5 +113,4 @@ testwgan.py
 images_128_first
 logs/
 submission/
-weights/
 .DS_Store

@@ -80,6 +80,34 @@ def make_alt_generator(input_shape=(100,), demo=False):
 
     return Model(noise, img)
 
+def make_mnist_generator(input_shape=(100,)):
+    '''For the MNIST digit generation'''
+    model = Sequential()
+
+    model.add(Dense(256 * 7 * 7, input_dim=100, name='input'))
+    model.add(BatchNormalization())
+    model.add(LeakyReLU())
+    model.add(Reshape((7, 7, 256)))
+
+    model.add(Conv2DTranspose(256, (5, 5), strides=2, padding='same'))
+    model.add(BatchNormalization())
+    model.add(LeakyReLU())
+
+    model.add(Conv2D(128, (5, 5), padding='same'))
+    model.add(BatchNormalization())
+    model.add(LeakyReLU())
+
+    model.add(Conv2DTranspose(64, (5, 5), strides=2, padding='same'))
+    model.add(BatchNormalization())
+    model.add(LeakyReLU())
+
+    model.add(Conv2D(1, (5, 5), padding='same', activation='tanh', name='output'))
+
+    noise = Input(shape=input_shape)
+    img = model(noise)
+
+    return Model(noise, img)
+
 def get_demo_data(directory):
     # we create two instances with the same arguments
     image_datagen = ImageDataGenerator()

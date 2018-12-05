@@ -6,27 +6,28 @@ from keras.models import Sequential, Model
 from keras.layers import Dropout, Conv2D, Dense, Flatten, BatchNormalization, Input
 from keras.layers.advanced_activations import LeakyReLU
 
-def make_discriminator(input_shape, demo=False):
+def make_discriminator(input_shape, demo=False, batchnorm=True):
     model = Sequential()
 
     model.add(Conv2D(64, kernel_size=(5, 5), strides=2, input_shape=input_shape, padding="same"))
-    model.add(BatchNormalization())
+    if batchnorm:
+        model.add(BatchNormalization())
     model.add(LeakyReLU())
-    model.add(Dropout(0.25))
 
     model.add(Conv2D(128, kernel_size=(5, 5), strides=2, padding="same"))
-    model.add(BatchNormalization())
+    if batchnorm:
+        model.add(BatchNormalization())
     model.add(LeakyReLU())
-    model.add(Dropout(0.25))
 
     model.add(Conv2D(256, kernel_size=(5, 5), strides=2, padding="same"))
-    model.add(BatchNormalization())
+    if batchnorm:
+        model.add(BatchNormalization())
     model.add(LeakyReLU())
 
     model.add(Conv2D(512, kernel_size=(5, 5), strides=2, padding="same"))
-    model.add(BatchNormalization())
+    if batchnorm:
+        model.add(BatchNormalization())
     model.add(LeakyReLU())
-    model.add(Dropout(0.25))
 
     model.add(Flatten())
 
