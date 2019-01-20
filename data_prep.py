@@ -35,6 +35,18 @@ def prepare_images(directory, batch_size, target_size, save=False):
 
     return train_generator
 
+def prepare_anime_images(directory, batch_size, target_size):
+    train_datagen = ImageDataGenerator(rescale=1./255, horizontal_flip=True)
+
+    train_generator = train_datagen.flow_from_directory(
+        directory,
+        classes=['animeface-character-dataset-thumb'],
+        target_size=target_size,
+        batch_size=batch_size,
+        shuffle=True)
+
+    return train_generator
+
 # for cifar experiments
 # cifar images are 32x32x3, be sure to take that into account
 def prepare_cifar10(batch_size):

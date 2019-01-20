@@ -13,10 +13,11 @@ from functools import partial
 
 import keras.backend as K
 
-from data_prep import prepare_images, prepare_mnist, prepare_cifar10
-from alt_gen import make_mnist_generator
-from generator import make_generator, make_cifar_generator
-from discriminator import make_discriminator
+from data_prep import prepare_images, prepare_mnist, prepare_cifar10, prepare_anime_images
+from alt_gen import make_mnist_generator, make_cifar_generator, make_anime_generator
+from generator import make_generator
+from discriminator import make_discriminator, make_anime_discriminator
+from resnet_disc import premade_resnet
 
 import matplotlib.pyplot as plt
 
@@ -26,18 +27,18 @@ import sys
 import numpy as np
 
 # parameters to tune
-MAX_ITERATIONS = 20000
+MAX_ITERATIONS = 100000
 N_CRITIC = 5
 BATCH_SIZE = 64
 SAMPLE_INTERVAL = 50
-LOG_FILE = 'logs/dummy_logs.txt'
-CRITIC_WEIGHTS_SAVE_LOC = 'weights/imp_wgan_dummy_critic.h5'
-GENERATOR_WEIGHTS_SAVE_LOC = 'weights/imp_wgan_dummy_gen.h5'
+LOG_FILE = 'logs/cifar_logs.txt'
+CRITIC_WEIGHTS_SAVE_LOC = 'weights/imp_wgan_cifar_critic.h5'
+GENERATOR_WEIGHTS_SAVE_LOC = 'weights/imp_wgan_cifar_gen.h5'
 # the below should be a folder
 IMAGES_SAVE_DIR = "results"
 GRADIENT_PENALTY_WEIGHT = 10
 
-CONST_NOISE = np.random.normal(0, 1, (25, 100))
+
 
 mode = 'pokemon'
 if len(sys.argv) > 1:
@@ -45,6 +46,8 @@ if len(sys.argv) > 1:
         mode = 'mnist'
     elif sys.argv[1] == 'cifar':
         mode = 'cifar'
+    elif sys.argv[1] == 'anime':
+        mode = 'anime'
 
 class RandomWeightedAverage(_Merge):
     """Provides a (random) weighted average between real and generated image samples"""
@@ -94,7 +97,8 @@ def wasserstein_loss(y_true, y_pred):
 def mean_loss(y_true, y_pred):
     return K.mean(y_pred)
 
-optimizer = Adam(0.0001, beta_1=0.5, beta_2=0.9)
+optimizer = Adam(0.0005, beta_1=0.0, beta_2=0.9999)
+input_dim = 100
 # Build the generator and critic
 generator = make_generator()
 image_shape = (128, 128, 3)
@@ -104,6 +108,12 @@ if mode == 'mnist':
 elif mode == 'cifar':
     generator = make_cifar_generator()
     image_shape = (32, 32, 3)
+elif mode == 'anime':
+    generator = make_anime_generator()
+    image_shape = (48, 48, 3)
+    input_dim=40
+
+CONST_NOISE = np.random.normal(0, 1, (25, input_dim))
 
 # we currently use the same discriminator across all
 critic = make_discriminator(image_shape)
@@ -115,7 +125,7 @@ for l in generator.layers:
 # Image input (real sample)
 real_img = Input(shape=image_shape)
 # Noise input
-z_disc = Input(shape=(100,))
+z_disc = Input(shape=(input_dim,))
 # Generate image based of noise (fake sample)
 fake_img = generator(z_disc)
 # Discriminator determines validity of the real and fake images
@@ -148,7 +158,7 @@ generator.trainable = True
 for l in generator.layers:
     l.trainable = True
 # Sampled noise for input to generator
-z_gen = Input(shape=(100,))
+z_gen = Input(shape=(input_dim,))
 # Generate images based of noise
 img = generator(z_gen)
 # Discriminator determines validity
@@ -161,11 +171,13 @@ with open(LOG_FILE, 'w') as f:
     f.write("")
 
 # Load the dataset
-prepare_function = prepare_images
+prepare_function = lambda x: prepare_images('data', x, (image_shape[0], image_shape[1])) # TODO fix this!
 if mode == 'mnist':
     prepare_function = prepare_mnist
 elif mode == 'cifar':
     prepare_function = prepare_cifar10
+elif mode == 'anime':
+    prepare_function = lambda x: prepare_anime_images('data', x, (image_shape[0], image_shape[1]))
 
 datagen = prepare_function(BATCH_SIZE)
 # Adversarial ground truths
@@ -174,7 +186,7 @@ fake = -valid
 dummy = -np.zeros((BATCH_SIZE, 1), dtype=np.float32) # Dummy gt for gradient penalty
 
 a_epoch = 0
-for epoch in range(MAX_ITERATIONS+1):
+for epoch in range(0, MAX_ITERATIONS+1):
     for _ in range(N_CRITIC):
         # get real images
         try:
@@ -189,12 +201,12 @@ for epoch in range(MAX_ITERATIONS+1):
 
         imgs = (imgs.astype(np.float32) - 0.5) * 2.0
         # Sample generator input
-        noise = np.random.rand(BATCH_SIZE, 100)
+        noise =  np.random.normal(0, 1, (BATCH_SIZE, input_dim))
         # Train the critic
         d_loss = critic_model.train_on_batch([imgs, noise],
                                                         [valid, fake, dummy])
 
-    g_loss = generator_model.train_on_batch(np.random.rand(BATCH_SIZE, 100), valid)
+    g_loss = generator_model.train_on_batch(np.random.normal(0, 1, (BATCH_SIZE, input_dim)), valid)
 
     # Plot the progress
     print ("%d [D loss: %f] [G loss: %f]" % (epoch, d_loss[0], g_loss))

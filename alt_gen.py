@@ -108,6 +108,70 @@ def make_mnist_generator(input_shape=(100,)):
 
     return Model(noise, img)
 
+def make_anime_generator(input_shape=(40,)):
+    '''For the anime face generation'''
+    model = Sequential()
+
+    model.add(Dense(1024 * 1 * 1, input_dim=40, name='input'))
+    model.add(BatchNormalization())
+    model.add(LeakyReLU())
+    model.add(Reshape((1, 1, 1024)))
+
+    model.add(Conv2DTranspose(1024, kernel_size=3, strides=1, padding='valid'))
+    model.add(BatchNormalization())
+    model.add(LeakyReLU())
+
+    model.add(Conv2DTranspose(512, kernel_size=4, strides=2, padding='same'))
+    model.add(BatchNormalization())
+    model.add(LeakyReLU())
+
+    model.add(Conv2DTranspose(256, kernel_size=4, strides=2, padding='same'))
+    model.add(BatchNormalization())
+    model.add(LeakyReLU())
+
+    model.add(Conv2DTranspose(128, kernel_size=4, strides=2, padding='same'))
+    model.add(BatchNormalization())
+    model.add(LeakyReLU())
+
+    model.add(Conv2DTranspose(3, kernel_size=4, padding='same', strides=2, activation='tanh', name='output'))
+
+    noise = Input(shape=input_shape)
+    img = model(noise)
+
+    return Model(noise, img)
+
+def make_cifar_generator(input_shape=(100,)):
+    '''For the cifar digit generation'''
+    model = Sequential()
+
+    model.add(Dense(1024 * 1 * 1, input_dim=100, name='input'))
+    model.add(BatchNormalization())
+    model.add(LeakyReLU())
+    model.add(Reshape((1, 1, 1024)))
+
+    model.add(Conv2DTranspose(1024, kernel_size=2, strides=1, padding='valid'))
+    model.add(BatchNormalization())
+    model.add(LeakyReLU())
+
+    model.add(Conv2DTranspose(512, kernel_size=4, strides=2, padding='same'))
+    model.add(BatchNormalization())
+    model.add(LeakyReLU())
+
+    model.add(Conv2DTranspose(256, kernel_size=4, strides=2, padding='same'))
+    model.add(BatchNormalization())
+    model.add(LeakyReLU())
+
+    model.add(Conv2DTranspose(128, kernel_size=4, strides=2, padding='same'))
+    model.add(BatchNormalization())
+    model.add(LeakyReLU())
+
+    model.add(Conv2DTranspose(3, kernel_size=4, padding='same', strides=2, activation='tanh', name='output'))
+
+    noise = Input(shape=input_shape)
+    img = model(noise)
+
+    return Model(noise, img)
+
 def get_demo_data(directory):
     # we create two instances with the same arguments
     image_datagen = ImageDataGenerator()
