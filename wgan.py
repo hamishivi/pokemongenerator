@@ -17,7 +17,7 @@ import keras.backend as K
 from keras.layers import Input
 
 # import models - change me to change models used
-from discriminator import make_discriminator
+from discriminator import make_poke_discriminator
 from generator import make_generator
 from data_prep import prepare_images
 
@@ -47,7 +47,7 @@ print("Images prepped. Making WGAN...")
 
 # make our models
 generator = make_generator()
-discriminator = make_discriminator(IMAGE_SHAPE_CH)
+discriminator = make_poke_discriminator(IMAGE_SHAPE_CH)
 discriminator.compile(loss=EM_loss,
                       optimizer=keras.optimizers.RMSprop(lr=0.00005),
                       metrics=["accuracy"])
@@ -74,7 +74,7 @@ for epoch in range(MAX_ITERATIONS):
     # the second iteration of the wgan paper suggests doing this
     # to help the discriminator reach convergence faster.
     if epoch < 25 or epoch % 500 == 0:
-        d_iters = 1
+        d_iters = 100
     for _ in range(d_iters):
         # get real images
         imgs = next(datagen)[0]

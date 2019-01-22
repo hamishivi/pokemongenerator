@@ -71,6 +71,7 @@ def prepare_mnist(batch_size):
         # dummy second value to make it match the other generator
         yield (x_train[batch_size*i:batch_size*(i+1)], 0)
 
+# to demo how this works
 if __name__ == "__main__":
     print("Generating demo images...")
     # clean

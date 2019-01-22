@@ -16,8 +16,7 @@ import keras.backend as K
 from data_prep import prepare_images, prepare_mnist, prepare_cifar10, prepare_anime_images
 from alt_gen import make_mnist_generator, make_cifar_generator, make_anime_generator
 from generator import make_generator
-from discriminator import make_discriminator, make_anime_discriminator
-from resnet_disc import premade_resnet
+from discriminator import make_discriminator, make_poke_discriminator
 
 import matplotlib.pyplot as plt
 
@@ -31,9 +30,9 @@ MAX_ITERATIONS = 100000
 N_CRITIC = 5
 BATCH_SIZE = 64
 SAMPLE_INTERVAL = 50
-LOG_FILE = 'logs/cifar_logs.txt'
-CRITIC_WEIGHTS_SAVE_LOC = 'weights/imp_wgan_cifar_critic.h5'
-GENERATOR_WEIGHTS_SAVE_LOC = 'weights/imp_wgan_cifar_gen.h5'
+LOG_FILE = 'logs/dummy_logs.txt'
+CRITIC_WEIGHTS_SAVE_LOC = 'weights/imp_wgan_dummy_critic.h5'
+GENERATOR_WEIGHTS_SAVE_LOC = 'weights/imp_wgan_dummy_gen.h5'
 # the below should be a folder
 IMAGES_SAVE_DIR = "results"
 GRADIENT_PENALTY_WEIGHT = 10
@@ -48,6 +47,8 @@ if len(sys.argv) > 1:
         mode = 'cifar'
     elif sys.argv[1] == 'anime':
         mode = 'anime'
+    elif sys.argv[1] == 'pokemon-alt':
+        mode = 'alt'
 
 class RandomWeightedAverage(_Merge):
     """Provides a (random) weighted average between real and generated image samples"""
@@ -111,12 +112,19 @@ elif mode == 'cifar':
 elif mode == 'anime':
     generator = make_anime_generator()
     image_shape = (48, 48, 3)
-    input_dim=40
+    input_dim = 40
+elif mode == 'alt':
+    image_shape = (48, 48, 3)
+    generator = make_anime_generator()
+    input_dim = 40
 
 CONST_NOISE = np.random.normal(0, 1, (25, input_dim))
 
 # we currently use the same discriminator across all
-critic = make_discriminator(image_shape)
+critic = make_discriminator(image_shape, batchnorm=False)
+if mode == 'pokemon':
+    optimizer = Adam(0.0001, beta_1=0.5, beta_2=0.9)
+    critic = make_poke_discriminator(image_shape, batchnorm=False)
 
 # Freeze generator's layers while training critic
 generator.trainable = False
