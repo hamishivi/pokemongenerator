@@ -1,14 +1,42 @@
 # Pokemon Generator
 
-![Generated Pokemon](./report_images/wgan_gp_image.png)
+![Generated Pokemon](./readme_images/poke_wgangp_6650.png)
 
-*An example of generated pokemon*
+*An example of generated pokemon, from 6750 iterations of training with a WGAN-GP*
 
-![Generated MNIST Digits](./report_images/mnist_wgan_gp.png)
+Hi! This is my light implementation of a WGAN and WGAN-GP in Keras. I've cobbled together much code from around the place, so make sure to read the comments on my code to see where I got architectures/implementation details from. I'll put a list of repositories I found useful below. Originally, this was a university assignment, but once the assignment ended I pushed it futher to see if I could generate other sorts of images, such as mnist:
 
-*An example of MNIST style digits generated using the wgan-gp*
+![Generated MNIST Digits](./readme_images/mnist_wgan_gp.png)
 
-This is the codebase for my COMP3419 assignment, to generate pokemon with WGANs. To install all dependencies, simply run ```pip install -r requirements.txt```. However, if you wish to use GPU training, please remove tensorflow from the dependencies list in ```requirements.txt``` and install tensorflow-gpu on your own. To make sure you can run the WGAN-GP training, which requires second order gradients in some cases, ensure you have the latest versions of CUDnn and tensorflow-gpu installed.
+![Generated MNIST Digits](./readme_images/mnist_2100.png)
+
+*An example of MNIST style digits generated using the wgan-gp. The lower image was from only 2,100 iterations of training!*
+
+I also had a go at the CIFAR-10 dataset:
+
+![Generated CIFAR Images](./readme_images/cifar_10000.png)
+
+*An example of images generated using the wgan-gp and the CIFAR dataset (10,000 iterations).*
+
+And anime faces:
+
+![Generated Anime Faces](./readme_images/anime_50000.png)
+
+![Generated Anime Faces](./readme_images/anime_100000.png)
+
+*Examples of images generated using an anime face dataset. The top one is is from 50,000 iterations of training, and the lower from 10,000 iterations.*
+
+I also tried a different setup for pokemon generation, with mostly similar results:
+
+![Alternate pokemon images](./readme_images/alt_pokemon_6750.png)
+
+*An example of generated images using an alternate setup for generating pokemon images (6750 iterations)*
+
+## Running This Yourself
+
+<details of demo.py>
+  
+## Training This Yourself
 
 I'd highly recommend using GPU training if you can - it vastly speeds up training, and making results a matter of days instead of a matter of hours.
 
@@ -20,11 +48,11 @@ Note that Keras will warn about a "discrepancy between trainable weights and col
 
 Note no video was included in my submission as [this](https://edstem.org/courses/2893/discussion/111135) Ed post indicated it was not necessary.
 
-## Various Configurations Used
+## Architecture Configurations
 
 The various configurations of the WGAN-GP (which gave the best results) can be used by specifying them when calling ```python improved_wgan.py``` - use ```python improved_wgan.py mnist``` for generating the MNIST digits, and ```python improved_wgan.py cifar``` for generating the CIFAR-10 images. Otherwise, the pokemon configuration will be used.
 
-## Code overview
+## Quick Code Overview
 
 - ```report.pdf```: My report.
 
