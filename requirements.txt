@@ -22,7 +22,6 @@ pylint==2.1.1
 pyparsing==2.2.0
 python-dateutil==2.7.3
 pytz==2018.5
-PyYAML==3.13
 scipy==1.1.0
 six==1.11.0
 tensorboard==1.10.0

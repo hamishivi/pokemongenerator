@@ -24,7 +24,7 @@ And anime faces:
 
 ![Generated Anime Faces](./readme_images/anime_100000.png)
 
-*Examples of images generated using an anime face dataset. The top one is is from 50,000 iterations of training, and the lower from 10,000 iterations.*
+*Examples of images generated using an anime face dataset. The top one is is from 50,000 iterations of training, and the lower from 100,000 iterations.*
 
 I also tried a different setup for pokemon generation, with mostly similar results:
 
