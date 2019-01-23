@@ -2,31 +2,15 @@
 
 This folder contains the weights from my experiments. Although the files end with .h5, these are hdf5 files.
 
-Each weights file corresponds to the following experiment (named as laid out in my report):
+Run ```demo.py``` to see these in action!
 
-- ```baseline_mnist.h5```: weights for the baseline discriminator, trained on the MNIST dataset for 12 epochs.
-- ```improved_mnist.h5```: weights for the simple resnet discriminator, trained on the MNIST dataset for 12 epochs.
-- ```baseline_ad20k.h5```: weights for the baseline generator, trained on the AD20K dataset for 50 epochs.
-- ```improved_ad20k.h5```: weights for the improved generator, trained on the AD20K dataset for 50 epochs.
+The weights come in pairs: The critic weights are the weights for the critic/discriminator used in the model, the the gen weights are used for the generator. When it comes to ```demo.py```, only the generator weights are used. See the main README for more details. Unless otherwise stated, all models were trained using the WGAN-GP algorithm.
 
-- ```basedisc_basegen_critic_model.h5```: weights for the discriminator of the baseline WGAN configuration after 10,000 iterations of training.
-- ```basedisc_basegen_generator_model.h5```: weights for the generator of the baseline WGAN configuration after 10,000 iterations of training.
-- ```basedisc_upgen_critic_model.h5```: weights for the discriminator of the improved generator WGAN configuration after 10,000 iterations of training.
-- ```basedisc_upgen_generator_model.h5```: weights for the generator of the improved generator WGAN configuration after 10,000 iterations of training.
-- ```updisc_upgen_critic_model.h5```: weights for the discriminator of the improved (simple resnet) WGAN configuration after 10,000 iterations of training.
-- ```updisc_upgen_generator_model.h5```: weights for the generator of the improved (simple resnet) WGAN configuration after 10,000 iterations of training.
+The names correspond as follows:
 
-- ```no_aug_critic_model.h5```: weights of the discriminator after performing the no data augmentation experiment. (baseline discriminator)
-- ```no_aug_generator_model.h5```: weights of the generator after performing the no data augmentation experiment. (improved generator)
-- ```flip_only_critic_model.h5```: weights of the discriminator after performing the flip only data augmentation experiment. (baseline discriminator)
-- ```flip_only_generator_model.h5```: weights of the generator after performing the flip only data augmentation experiment. (improved generator)
-- ```crop_only_critic_model.h5```: weights of the discriminator after performing the crop and zoom only data augmentation experiment. (baseline discriminator)
-- ```crop_only_generator_model.h5```: weights of the generator after performing the crop and zoom only data augmentation experiment. (improved generator)
-
-- ```improved_up_critic.h5```: weights for the discriminator of the improved generator WGAN configuration after 10,000 iterations of training, using the WGAN-GP algorithm.
-- ```improved_up_gen.h5```: weights for the generator of the improved generator WGAN configuration after 10,000 iterations of training, using the WGAN-GP algorithm.
-
-		     
-		     
-	     
-	     
+- ```basedisc_upgen_<critic/gen>_model.h5```: The weights for the vanilla WGAN pokemon generator (generates 128x128 pokemon images).
+- ```imp_wgan_alt_pokemon_<critic/gen>.h5```: The weights for an alternate pokemon model that uses a 48x48 size generator, rather than 128x128. This uses the same generator as the anime face model.
+- ```imp_wgan_anime_<critic/gen>.h5```: The weights for the anime face model. Outputs 48x48 anime face images.
+- ```imp_wgan_cifar_<critic/gen>.h5```: The weights for the CIFAR-10 model. Generates 32x32 images based on the CIFAR-10 dataset.
+- ```imp_wgan_mnist_<critic/gen>.h5```: The weights for the MNIST model. Generates 28x28 images based on the MNIST dataset.
+- ```imp_wgan_pokemon_<critic/gen>.h5```: The weights for the WGAN-GP pokemon model. Uses the same architecture as the vanilla WGAN pokemon model, but trained using the WGAN-GP architecture.

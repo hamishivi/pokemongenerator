@@ -1,5 +1,7 @@
 '''
-Helper script for converting loss function data into usable graphs.
+Helper script for converting loss function data into simple graphs.
+log data should be a simple text file where each line is of format:
+[iteration number] [discriminator loss] [generator loss]
 '''
 import matplotlib.pyplot as plt
 import matplotlib as mpl
