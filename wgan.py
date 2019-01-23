@@ -1,6 +1,6 @@
 '''
-Main file that actually runs the WGAN training algorithm
-and brings together all the models. This was loosely based on
+Main file that runs the vanilla WGAN training algorithm.
+This was loosely based on
 https://github.com/eriklindernoren/Keras-GAN/blob/master/wgan/wgan.py
 but I have changed many elements of it.
 '''

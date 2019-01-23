@@ -1,7 +1,7 @@
 """
 A alternate generator setup, using transpose layers instead of
 upsampling. This is used for all the non-pokemon generation.
-(mnist, anime, cifar)
+(mnist, anime, cifar models)
 """
 import keras
 from keras.utils import plot_model

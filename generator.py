@@ -1,10 +1,7 @@
 '''
-Improved generator, using a mixture of upsampling and
-convolutional layers instead of transpose layers. I tested on a
-semantic segmentation dataset, and so for that also add an encoder 
-block that mirrors the decoder block (that forms the generator 
-in the actual WGAN). This was the improved generator model used
-in the report.
+Generator, using a mixture of upsampling and
+convolutional layers instead of transpose layers.
+Used for the pokemon model.
 '''
 import keras
 from keras.models import Sequential, Model

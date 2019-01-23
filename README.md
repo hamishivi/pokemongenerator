@@ -32,46 +32,51 @@ I also tried a different setup for pokemon generation, with mostly similar resul
 
 *An example of generated images using an alternate setup for generating pokemon images (6750 iterations)*
 
+There are 5 main models I trained and wrote up:
+
+- Models trained on a pokemon Sugimori art dataset, generating 128x128 images. I trained two models using this setup: one with the vanilla WGAN algorithm, and the other with the WGAN-GP algorithm.
+- A model trained on the pokemon Sugimori art dataset, but generatig 48x48 images, using the WGAN-GP algorithm.
+- A model trained on the MNIST dataset, using the WGAN-GP algorithm.
+- A model trained on the CIFAR-10 dataset, using the WGAN-GP algorithm.
+- A model trained on an anime face dataset (see below for details), generating 48x48 images, using the WGAN-GP algorithm.
+
 ## Running This Yourself
 
-<details of demo.py>
+In this repo, I have included the weights used to generate the above images, in the ```weights``` folder. To check this out, simply install the dependencies (keras, tensorflow, etc - a simple ```pip install -r requirements.txt``` should be enough) and run ```demo.py```! This should be runnable without needing some beefy GPU - it runs alright-ish on my little 2015 MacBook.
   
 ## Training This Yourself
 
-I'd highly recommend using GPU training if you can - it vastly speeds up training, and making results a matter of days instead of a matter of hours.
+Firstly, training these models takes a long time! Even mnist takes at least an hour or two, with GPU training. So make sure you're using a GPU, and ready to run these programs for a while. Also, make sure to install the dependencies (```pip install -r requirements.txt```). If you're using a GPU, make sure to install ```tensorflow-gpu``` rather than ```tensorflow``` (which is in the requirements file currently).
 
-Before running any code, you also need to download and correctly preprocess the datasets I used. Keras automatically handles downloading the MNIST and CIFAR datasets, so you don't need to worry about that. For the AD20K dataset, used for testing semantic segmentation, please download it from [here](https://groups.csail.mit.edu/vision/datasets/ADE20K/). You will then have to reformat the layout of this dataset: place it into a folder called ```segmentation_dataset``` with one subfolder: ```images```. Inside ```images``` There should be 3 folders: ```masks```, which contains all segmentation masks of the training set in order; ```raws```, which contains all raw images of the dataset in order; ```test```, which again contains two folders,  ```raws``` and ```masks```, which contains the raw images and segmentation masks of the test dataset respectively. Look at ```utils/data_move.py``` for some help in doing this in code. Finally, download the Sugimori art dataset from [veekun](https://veekun.com/static/pokedex/downloads/pokemon-sugimori.tar.gz), and place this in a folder called ```data/pokemon```. You will also have to convert all these images from RGBA to RGB - look at ```utils/rgba_to_rgb.py``` for help with this. Once these datasets are correctly downloaded and sorted, you should be able to run the demo and training programs without issues.
+Firstly, before running any code, you will need to download and correctly preprocess the datasets I used. Keras automatically handles downloading the MNIST and CIFAR datasets, so you don't need to worry about that. For the pokemon images, download the Sugimori art dataset from [veekun](https://veekun.com/static/pokedex/downloads/pokemon-sugimori.tar.gz), and place this in a folder called ```data/pokemon```. You will also have to convert all these images from RGBA to RGB - look at ```utils/rgba_to_rgb.py``` for help with this. Once these datasets are correctly downloaded and sorted, you should be able to run the demo and training programs without issues. For the Anime face images, I used the dataset found [here](http://www.nurs.or.jp/~nagadomi/animeface-character-dataset/). Again, you'll need to convert these to jpeg images and place the face images into a folder called ```data/animeface-character-dataset-thumb```. 
 
-If you just want to see results, please run ```demo.py```. Otherwise, check ```wgan.py``` and ```improved_wgan.py``` for the training code. In particular, both import functions to create generator and discriminator models. By changing the function used, you can change the WGAN configuration. Other changeable parameters are listed in the top of the files, in capitals. Ensure that all directories arftifacts are saved into exist, otherwise there will be errors when running the code.
+Once the data has been prepared, you can run the training! For the Vanilla WGAN model, just run ```wgan.py``` - it will train the model. Make sure you take a look in the code to change the constants at the top - set where the weights, images, and logs get saved. By default, these get saved into folders called ```weights```, ```results```, and ```logs``` respectively, so at least make sure these folders exist. To run the other models, you'll be running ```improved_wgan.py```. This defaults to training the pokemon model (training on the pokemon dataset), but can be changed to other datasets by giving a command line argument as such: ```python improved_wgan.py <arg>```. The possible arguments are:
+
+- ```mnist```: Train the MNIST model.
+- ```cifar```: Train the CIFAR-10 model.
+- ```anime```: Train the anime-face model.
+- ```pokemon-alt```: Train the alternate pokemon model.
 
 Note that Keras will warn about a "discrepancy between trainable weights and collected trainable weights" - please ignore this as this error is intended for users who do not need to reuse models in different setups with different trainable layers, as is the case with GANs.
 
-Note no video was included in my submission as [this](https://edstem.org/courses/2893/discussion/111135) Ed post indicated it was not necessary.
-
-## Architecture Configurations
-
-The various configurations of the WGAN-GP (which gave the best results) can be used by specifying them when calling ```python improved_wgan.py``` - use ```python improved_wgan.py mnist``` for generating the MNIST digits, and ```python improved_wgan.py cifar``` for generating the CIFAR-10 images. Otherwise, the pokemon configuration will be used.
-
 ## Quick Code Overview
 
-- ```report.pdf```: My report.
+Here's a quick description of each file with code:
 
-- ```utils```: various utility functions for experimentation. ```data_move.py``` helped with moving files into appropriate directories when dealing with the AD20K dataset. ```rgba_to_rgb.py``` converts all images in a folder from RGBA to RGB. This was required as pokémon images were usually RGBA. ```loss_plot.py``` turns a log file into a graph. Log files were of the format "[iteration] [discriminator loss] [generator loss]", with each iteration on a new line. This program was used to generate the graphs seen in the report.
+- ```utils```: various utility functions for experimentation. ```rgba_to_rgb.py``` converts all images in a folder from RGBA to RGB. This was required as pokémon images were usually RGBA. ```loss_plot.py``` turns a log file into a graph. Log files were of the format "[iteration] [discriminator loss] [generator loss]", with each iteration on a new line. This program was used to generate the graphs seen in the report.
 
-- ```weights```: Various weights from the experiments. Generator weights can be used to reproduce images. These weights are used in the demo program.
+- ```weights```: Various weights from the experiments. Generator weights can be used to reproduce images. These weights are used in the demo program. See the readme in the folder for more details.
 
-- ```alt_gen.py```: The baseline generator, with deconvolution layers. Run the file to train and then test it on the AD20K dataset for semantic segmentation.
+- ```alt_gen.py```: The generators for the non-pokemon models, using deconvolution layers.
 
-- ```generator.py```: The improved generator, with convolution and upsampling layers. Run the file to train and then test it on the AD20K dataset for semantic segmentation.
+- ```generator.py```: The generator for the pokemon model, using convolution and upsampling layers.
 
-- ```discriminator.py```: The baseline discriminator. Run this file to train and test it on the MNIST dataset.
+- ```discriminator.py```: The discriminators for the models. The normal pokemon model uses ```make_poke_discriminator```, and all other models use ```make_discriminator```.
 
-- ```resnet_disc.py```: The resnet discriminator. Run this file to train and test it on the MNIST dataset.
+- ```wgan.py```: The WGAN training code. This imports discriminator/critic architectures from the above files and runs the vanilla WGAN algorithm. Only used for the pokemon model.
 
-- ```wgan.py```: The WGAN training code. Change the ```make_generator``` and ```make_discriminator``` functions to other model building functions found in the above files to test on different configurations.
+- ```improved_wgan.py```: The WGAN-GP training code. Used for most of the models.
 
-- ```improved_wgan.py```: The WGAN-GP training code. Change the ```make_generator``` and ```make_discriminator``` functions to other model building functions found in the above files to test on different configurations.
+- ```data_prep.py```: The data preparation code for the various datasets. Run it to see the results of data preparation (please make sure there is a local directory called ```transform``` before running the code).
 
-- ```data_prep.py```: The data preparation code. Run it to see the results of data preparation (please make sure there is a local directory called ```transform``` before running the code).
-
-- ```demo.py```: The demo code. Run this to see the results of different WGANs and the individual results of each architecture. This requires the segmentation dataset has been downloaded and correctly sorted. If you cannot do this, simply comment out the AD20K tests in the code.
+- ```demo.py```: The demo code. Run this to see the results of different models, using the pre-trained weights.

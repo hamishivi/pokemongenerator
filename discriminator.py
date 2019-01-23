@@ -1,5 +1,5 @@
 '''
-Discriminator used across all WGAN setups.
+Discriminators used across all WGAN setups.
 '''
 import keras
 from keras.models import Sequential, Model
