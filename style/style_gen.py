@@ -79,4 +79,4 @@ def make_generator(im_size):
     # output
     x = Conv2D(filters = 3, kernel_size = 1, padding = 'same', activation = 'sigmoid', bias_initializer = 'zeros')(x)
     # and then we have our model!
-    return Model(inputs = inputs_style + [inputs_noise, inp], outputs = x)
+    return Model(inputs = inputs_style + [inputs_noise, inp], outputs = x), style_layers
