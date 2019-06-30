@@ -10,23 +10,20 @@ from keras.optimizers import Adam
 import keras.backend as K
 
 from AdaIN import AdaInstanceNormalization
-from .style_mapper import make_mapper
+from style_mapper import make_mapper
 from style_gen import make_generator
 from style_disc import make_discriminator
-from ..data_prep import prepare_images, prepare_mnist, prepare_cifar10, prepare_anime_images
+from data_prep import prepare_images, prepare_mnist, prepare_cifar10, prepare_anime_images
 
 # constants
-BATCH_SIZE = 32
 MAX_ITERATIONS = 100000
-N_CRITIC = 5
-BATCH_SIZE = 64
-SAMPLE_INTERVAL = 50
+BATCH_SIZE = 32
+SAMPLE_INTERVAL = 100
 LOG_FILE = 'logs/dummy_logs.txt'
 CRITIC_WEIGHTS_SAVE_LOC = 'weights/imp_wgan_dummy_critic.h5'
 GENERATOR_WEIGHTS_SAVE_LOC = 'weights/imp_wgan_dummy_gen.h5'
 # the below should be a folder
 IMAGES_SAVE_DIR = "results"
-GRADIENT_PENALTY_WEIGHT = 10
 
 # determine which dataset we are using
 mode = 'pokemon'
@@ -64,9 +61,9 @@ def gradient_penalty_loss(y_true, y_pred, averaged_samples, gradient_penalty_wei
     # return the mean as loss over all the batch samples
     return K.mean(gradient_penalty)
 
-im_size = 100
-latent_size = 100
-lr = 0.01
+im_size = image_shape[0]
+latent_size = 512
+lr = 0.0001
 
 discriminator = make_discriminator(im_size)
 generator, style_layers = make_generator(im_size)
@@ -99,7 +96,7 @@ df = discriminator(gf)
 
 AM = Model(inputs = [gi, gi2, gi3], outputs = df)
 
-AM.compile(optimizer = 'adam', loss = 'mse')
+AM.compile(optimizer = Adam(lr, beta_1 = 0, beta_2 = 0.99, decay = 0.00001), loss = 'mse')
 
 # second model, mixedModel: again, freezing discriminator and training generator and mapper -
 # but we also introduce some regularities
@@ -126,7 +123,7 @@ gf = generator(ss + [gi2, gi3])
 df = discriminator(gf)
 # compile!
 MM = Model(inputs = inp_s + [gi2, gi3], outputs = df)
-MM.compile(optimizer = 'adam', loss = 'mse')
+MM.compile(optimizer = Adam(lr, beta_1 = 0, beta_2 = 0.99, decay = 0.00001), loss = 'mse')
 
 # Model 3: DisModel, just training the discriminator
 discriminator.trainable = True
@@ -155,7 +152,7 @@ df = discriminator(gf)
 
 DM = Model(inputs=[ri, gi, gi2, gi3], outputs=[dr, df, dr])
 # special GP Loss
-partial_gp_loss = partial(gradient_penalty_loss, averaged_samples = ri, weight = 50)
+partial_gp_loss = partial(gradient_penalty_loss, averaged_samples = ri, gradient_penalty_weight = 10)
 
 # we have mse, mse, then gp loss
 DM.compile(optimizer=Adam(lr, beta_1 = 0, beta_2 = 0.99, decay = 0.00001), loss=['mse', 'mse', partial_gp_loss])
@@ -190,7 +187,7 @@ dr = discriminator(ri)
 
 DMM = Model(inputs = [ri] + inp_s + [gi2, gi3], outputs=[dr, df, dr])
 
-partial_gp_loss = partial(gradient_penalty_loss, averaged_samples = ri, weight = 50)
+partial_gp_loss = partial(gradient_penalty_loss, averaged_samples = ri, gradient_penalty_weight = 10)
 
 DMM.compile(optimizer=Adam(lr, beta_1 = 0, beta_2 = 0.99, decay = 0.00001), loss=['mse', 'mse', partial_gp_loss])
 
@@ -225,6 +222,8 @@ enoiseImage = np.random.uniform(0.0, 1.0, size = [8, im_size, im_size, 1])
 for step in range(MAX_ITERATIONS+1):
     try:
         imgs = next(datagen)[0]
+        if imgs.shape[0] < BATCH_SIZE:
+            raise StopIteration  # throw out the last batch if it is less than batch size.
     except StopIteration:
         datagen = prepare_function(BATCH_SIZE)
         imgs = next(datagen)[0]
@@ -277,70 +276,11 @@ for step in range(MAX_ITERATIONS+1):
         
     if step % SAMPLE_INTERVAL == 0:
         # todo, sample our images
-        print(f"Epoch {step}:")
+        print(f"Step {step}:")
         print(f"D_loss: {str(d_loss)}")
         print("G_loss: " + str(g_loss))
-    
-    
-    def evaluate(num = 0): #8x8 images, bottom row is constant
-        n = np.random.normal(0.0, 1.0, size = [56, latent_size])
-        n2 = np.random.uniform(0.0, 1.0, size = [56, im_size, im_size, 1])
-        im = predict(([n] * style_layers) + [n2, np.ones([56, 1])])
-        im3 = predict(([enoise] * style_layers) + [enoiseImage, np.ones([8, 1])])
-        
-        r = []
-        r.append(np.concatenate(im[:8], axis = 1))
-        r.append(np.concatenate(im[8:16], axis = 1))
-        r.append(np.concatenate(im[16:24], axis = 1))
-        r.append(np.concatenate(im[24:32], axis = 1))
-        r.append(np.concatenate(im[32:40], axis = 1))
-        r.append(np.concatenate(im[40:48], axis = 1))
-        r.append(np.concatenate(im[48:56], axis = 1))
-        r.append(np.concatenate(im3[:8], axis = 1))
-        
-        c1 = np.concatenate(r, axis = 0)
-        
-        x = Image.fromarray(np.uint8(c1*255), mode = 'YCbCr')
-        
-        x.save("Results/i"+str(num)+"ii.jpg")
-        
-    
-    def evalMix(num = 0):
-        bn = np.random.normal(0.0, 1.0, size = [8, latent_size])
-        sn = np.random.normal(0.0, 1.0, size = [8, latent_size])
-        n = []
-        for i in range(style_layers):
-            n.append([])
-        
-        for i in range(8):
-            for j in range(8):
-                for l in range(0, int(style_layers/2)):
-                    n[l].append(bn[i])
-                for l in range(int(style_layers/2), style_layers):
-                    n[l].append(sn[j])
-        
-        for i in range(style_layers):
-            n[i] = np.array(n[i])
-            
-        noise_image = np.random.uniform(0.0, 1.0, size = [64, im_size, im_size, 1])
-        im = predict(n + [noise_image, np.ones([64, 1])])
-        
-        r = []
-        r.append(np.concatenate(im[:8], axis = 1))
-        r.append(np.concatenate(im[8:16], axis = 1))
-        r.append(np.concatenate(im[16:24], axis = 1))
-        r.append(np.concatenate(im[24:32], axis = 1))
-        r.append(np.concatenate(im[32:40], axis = 1))
-        r.append(np.concatenate(im[40:48], axis = 1))
-        r.append(np.concatenate(im[48:56], axis = 1))
-        r.append(np.concatenate(im[56:], axis = 1))
-        c = np.concatenate(r, axis = 0)
-        
-        x = Image.fromarray(np.uint8(c*255), mode = 'YCbCr')
-        
-        x.save("Results/i"+str(num)+"mm.jpg")
-        
-    def evalTrunc(num = 0, trunc = 2.0, scale = 1, nscale = 0.8, custom_noise = np.array([0])):
+
+    def evalTrunc(num = 0, trunc = 0.7, scale = 1, nscale = 0.8, custom_noise = np.array([0])):
         noise = np.random.normal(0.0, 1.0, size = [2048, latent_size])
         ss = mapper.predict(noise, batch_size = 128)
 
@@ -374,3 +314,6 @@ for step in range(MAX_ITERATIONS+1):
         x = Image.fromarray(np.uint8(c1*255), mode = 'YCbCr')
         
         x.save("Results/i"+str(num)+"tt.jpg")
+
+    if step % SAMPLE_INTERVAL == 0:
+        evalTrunc(step)

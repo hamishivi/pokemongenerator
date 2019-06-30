@@ -47,7 +47,7 @@ def g_block(inp, style, noise, filter_size, upsample = True):
 
 def make_generator(im_size):
     # we have multiple inputs, for each size
-    inputs_style = [input(shape=[512]) for x in range(4, im_size) if x % 2 == 0]
+    inputs_style = [Input(shape=[512]) for x in range(4, im_size) if x % 2 == 0]
     style_layers = len(inputs_style)
     # get the noise image and crop for each size
     inputs_noise = Input(shape = [im_size, im_size, 1])
@@ -60,7 +60,7 @@ def make_generator(im_size):
     inp = Input(shape = [1])
     x = Dense(4 * 4 * im_size, kernel_initializer = 'ones', bias_initializer = 'zeros')(inp)
     x = Reshape([4, 4, im_size])(x)
-    x = g_block(x, inputs_style[0], noises[-1], im_size, u=False)
+    x = g_block(x, inputs_style[0], noises[-1], im_size, upsample=False)
     # apply layers as need be (TODO: make this less ugly)
     if(im_size >= 1024):
         x = g_block(x, inputs_style[-8], noises[7], 512) # Size / 64

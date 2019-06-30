@@ -9,9 +9,14 @@ from keras.models import Model
 
 # this is a really simple feedforward network :)
 def make_mapper(latent_size):
-    # only use 5 layers instead of 8 for faster training (TODO: test this!)
     inp = Input(shape = [latent_size])
     x = Dense(512, kernel_initializer = 'he_normal', bias_initializer = 'zeros')(inp)
+    x = LeakyReLU(0.01)(x)
+    x = Dense(512, kernel_initializer = 'he_normal', bias_initializer = 'zeros')(x)
+    x = LeakyReLU(0.01)(x)
+    x = Dense(512, kernel_initializer = 'he_normal', bias_initializer = 'zeros')(x)
+    x = LeakyReLU(0.01)(x)
+    x = Dense(512, kernel_initializer = 'he_normal', bias_initializer = 'zeros')(x)
     x = LeakyReLU(0.01)(x)
     x = Dense(512, kernel_initializer = 'he_normal', bias_initializer = 'zeros')(x)
     x = LeakyReLU(0.01)(x)
