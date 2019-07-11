@@ -45,10 +45,24 @@ def g_block(inp, style, noise, filter_size, upsample = True):
     return out
 
 
-def make_generator(im_size):
+def make_generator(im_size, latent_size):
     # we have multiple inputs, for each size
-    inputs_style = [Input(shape=[512]) for x in range(4, im_size) if x % 2 == 0]
-    style_layers = len(inputs_style)
+    # below is the mapping network 'rolled into'
+    # the generator
+    style_input = Input(shape = [latent_size])
+    style = Dense(512, kernel_initializer = 'he_normal')(style_input)
+    style = LeakyReLU(0.01)(style)
+    style = Dense(512, kernel_initializer = 'he_normal')(style)
+    style = LeakyReLU(0.01)(style)
+    # style = Dense(512, kernel_initializer = 'he_normal')(style)
+    # style = LeakyReLU(0.01)(style)
+    # style = Dense(512, kernel_initializer = 'he_normal')(style)
+    # style = LeakyReLU(0.01)(style)
+    # style = Dense(512, kernel_initializer = 'he_normal')(style)
+    # style = LeakyReLU(0.01)(style)
+    # style = Dense(512, kernel_initializer = 'he_normal')(style)
+    # style = LeakyReLU(0.01)(style)
+    # style = Dense(512, kernel_initializer = 'he_normal')(style)
     # get the noise image and crop for each size
     inputs_noise = Input(shape = [im_size, im_size, 1])
     noises = [Activation('linear')(inputs_noise)]
@@ -58,25 +72,25 @@ def make_generator(im_size):
         noises.append(Cropping2D(int(x/2))(noises[-1]))
     # our initial input
     inp = Input(shape = [1])
-    x = Dense(4 * 4 * im_size, kernel_initializer = 'ones', bias_initializer = 'zeros')(inp)
+    x = Dense(4 * 4 * im_size, kernel_initializer = 'he_normal')(inp)
     x = Reshape([4, 4, im_size])(x)
-    x = g_block(x, inputs_style[0], noises[-1], im_size, upsample=False)
+    x = g_block(x, style, noises[-1], im_size, upsample=False)
     # apply layers as need be (TODO: make this less ugly)
     if(im_size >= 1024):
-        x = g_block(x, inputs_style[-8], noises[7], 512) # Size / 64
+        x = g_block(x, style, noises[7], 512) # Size / 64
     if(im_size >= 512):
-        x = g_block(x, inputs_style[-7], noises[6], 384) # Size / 64
+        x = g_block(x, style, noises[6], 384) # Size / 64
     if(im_size >= 256):
-        x = g_block(x, inputs_style[-6], noises[5], 256) # Size / 32
+        x = g_block(x, style, noises[5], 256) # Size / 32
     if(im_size >= 128):
-        x = g_block(x, inputs_style[-5], noises[4], 192) # Size / 16
+        x = g_block(x, style, noises[4], 192) # Size / 16
     if(im_size >= 64):
-        x = g_block(x, inputs_style[-4], noises[3], 128) # Size / 8
+        x = g_block(x, style, noises[3], 128) # Size / 8
     # final set of blocks
-    x = g_block(x, inputs_style[-3], noises[2], 64) # Size / 4
-    x = g_block(x, inputs_style[-2], noises[1], 32) # Size / 2
-    x = g_block(x, inputs_style[-1], noises[0], 16) # Size
+    x = g_block(x, style, noises[2], 64) # Size / 4
+    x = g_block(x, style, noises[1], 32) # Size / 2
+    x = g_block(x, style, noises[0], 16) # Size
     # output
-    x = Conv2D(filters = 3, kernel_size = 1, padding = 'same', activation = 'sigmoid', bias_initializer = 'zeros')(x)
+    x = Conv2D(filters = 3, kernel_size = 1, padding = 'same', activation = 'sigmoid')(x)
     # and then we have our model!
-    return Model(inputs = inputs_style + [inputs_noise, inp], outputs = x), style_layers
+    return Model(inputs = [style_input, inputs_noise, inp], outputs = x)
