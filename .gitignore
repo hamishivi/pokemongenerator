@@ -114,3 +114,4 @@ images_128_first
 logs/
 submission/
 .DS_Store
+weights/
