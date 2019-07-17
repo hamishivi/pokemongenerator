@@ -65,7 +65,7 @@ There are 7 main models I trained:
 
 ## Running This Yourself
 
-In this repo, I have included the weights used to generate the above images, in the ```weights``` folder. To check this out, simply install the dependencies (keras, tensorflow, etc - a simple ```pip install -r requirements.txt``` should be enough) and run ```demo.py```! This should be runnable without needing some beefy GPU - it runs alright-ish on my little 2015 MacBook.
+You can download the pretrained models at [this link](https://drive.google.com/open?id=1hEU2oKxeqAcdZBpZwJEWN1cc14iW_xew). Simply download them and place them in a folder called ```weights``` if you want to check them out. Then, simply install the dependencies (keras, tensorflow, etc - a simple ```pip install -r requirements.txt``` should be enough) and run ```demo.py```! This should be runnable without needing some beefy GPU - it runs alright-ish on my little 2015 MacBook.
   
 ## Training This Yourself
 
