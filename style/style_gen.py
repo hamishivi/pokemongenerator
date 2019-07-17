@@ -1,10 +1,15 @@
+'''
+Adapted from https://github.com/manicman1999/StyleGAN-Keras, with my own comments.
+
+The mapping network is defined as part of the generator, rather than having its own file.
+'''
 from keras.layers import Conv2D, Dense, LeakyReLU, Activation
 from keras.layers import Reshape, UpSampling2D, Input, add, Cropping2D
 from keras.models import Model
 
 from AdaIN import AdaInstanceNormalization
 
-# generator block, defined separately as it is very complicated!
+
 def g_block(inp, style, noise, filter_size, upsample = True):
     # b and g = beta and gamma. these are learnt transformations for the 
     # AdaIN operation. Both comprise 'A' in the paper diagram.
@@ -48,7 +53,8 @@ def g_block(inp, style, noise, filter_size, upsample = True):
 def make_generator(im_size, latent_size, num_channels):
     # we have multiple inputs, for each size
     # below is the mapping network 'rolled into'
-    # the generator
+    # the generator. It is much smaller than the mapping network
+    # in the paper, mainly for faster training.
     style_input = Input(shape = [latent_size])
     style = Dense(512, kernel_initializer = 'he_normal')(style_input)
     style = LeakyReLU(0.1)(style)
@@ -66,21 +72,21 @@ def make_generator(im_size, latent_size, num_channels):
     x = Dense(4 * 4 * 512, kernel_initializer = 'he_normal')(inp)
     x = Reshape([4, 4, 512])(x)
     x = g_block(x, style, noises[-1], 512, upsample=False)
-    # apply layers as need be (TODO: make this less ugly)
+    # apply layers as need be
     if(im_size >= 1024):
-        x = g_block(x, style, noises[7], 512) # Size / 64
+        x = g_block(x, style, noises[7], 512)
     if(im_size >= 512):
-        x = g_block(x, style, noises[6], 384) # Size / 64
+        x = g_block(x, style, noises[6], 384)
     if(im_size >= 256):
-        x = g_block(x, style, noises[5], 256) # Size / 32
+        x = g_block(x, style, noises[5], 256)
     if(im_size >= 128):
-        x = g_block(x, style, noises[4], 192) # Size / 16
+        x = g_block(x, style, noises[4], 192)
     if(im_size >= 64):
-        x = g_block(x, style, noises[3], 128) # Size / 8
+        x = g_block(x, style, noises[3], 128)
     # final set of blocks
-    x = g_block(x, style, noises[2], 64) # Size / 4
-    x = g_block(x, style, noises[1], 32) # Size / 2
-    x = g_block(x, style, noises[0], 16) # Size
+    x = g_block(x, style, noises[2], 64)
+    x = g_block(x, style, noises[1], 32)
+    x = g_block(x, style, noises[0], 16)
     # output
     x = Conv2D(filters = num_channels, kernel_size = 1, padding = 'same', activation = 'tanh')(x)
     # and then we have our model!

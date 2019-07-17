@@ -1,6 +1,7 @@
 '''
 Basic module for preprocessing images and applying
-data augmentation.
+data augmentation. The same as the regular one, just without the mnist
+and cifar functions.
 '''
 import os
 import numpy as np

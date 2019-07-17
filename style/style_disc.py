@@ -1,7 +1,8 @@
 '''
-Adapted from https://github.com/manicman1999/StyleGAN-Keras
-However, the StyleGAN paper doesn't really specify a specific discriminator,
-as most of its improvements are based on generator improvements.
+Adapted from https://github.com/manicman1999/StyleGAN-Keras more or less completely.
+
+The StyleGAN paper specifically mentions that its main contributions are in the generator,
+so theoretically this discriminator could be swapped with different architectures if you wish.
 '''
 from keras.layers import Conv2D, Dense, AveragePooling2D, LeakyReLU
 from keras.layers import Dropout, Flatten, Input
@@ -21,20 +22,19 @@ def make_discriminator(im_size, num_channels):
     # basic input 
     inp = Input(shape = [im_size, im_size, num_channels])
     # stacking the discriminator blocks
-    x = d_block(inp, 16) #Size / 2
-    x = d_block(x, 32) #Size / 4
-    x = d_block(x, 64) #Size / 8
-    # TODO: make this neater
+    x = d_block(inp, 16)
+    x = d_block(x, 32)
+    x = d_block(x, 64
     if (im_size > 32):
-        x = d_block(x, 128) #Size / 16
+        x = d_block(x, 128)
     if (im_size > 64):
-        x = d_block(x, 192) #Size / 32
+        x = d_block(x, 192)
     if (im_size > 128):
-        x = d_block(x, 256) #Size / 64
+        x = d_block(x, 256)
     if (im_size > 256):
-        x = d_block(x, 384) #Size / 128
+        x = d_block(x, 384)
     if (im_size > 512):
-        x = d_block(x, 512) #Size / 256
+        x = d_block(x, 512)
     # flatten it all down for the scoring
     x = Flatten()(x)
     # final dense blocks

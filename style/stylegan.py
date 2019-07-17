@@ -1,3 +1,8 @@
+'''
+Adapted from https://github.com/manicman1999/StyleGAN-Keras
+However, I have changed various elements and made it fit
+the style of this codebase.
+'''
 import numpy as np
 from functools import partial
 import sys
@@ -27,6 +32,9 @@ CRITIC_WEIGHTS_SAVE_LOC = 'weights/style_critic_dummy.h5'
 GENERATOR_WEIGHTS_SAVE_LOC = 'weights/style_gen_dummy.h5'
 # the below should be a folder
 IMAGES_SAVE_DIR = "results"
+# main hyperparams
+LATENT_SIZE = 512
+LEARNING_RATE = 0.0001
 
 # determine which dataset we are using
 mode = 'pokemon'
@@ -35,6 +43,7 @@ if len(sys.argv) > 1:
     if sys.argv[1] == 'anime':
         mode = 'anime'
         image_shape = (128, 128, 3)
+im_size = image_shape[0]
 
 # GP part of WGAN-GP training algorithm
 # from https://github.com/eriklindernoren/Keras-GAN/blob/master/wgan_gp/wgan_gp.py
@@ -58,37 +67,30 @@ def gradient_penalty_loss(y_true, y_pred, averaged_samples, gradient_penalty_wei
 def wasserstein_loss(y_true, y_pred):
     return K.mean(y_true * y_pred)
 
-im_size = image_shape[0]
-latent_size = 512
-lr = 0.0001
-
 discriminator = make_discriminator(im_size, image_shape[-1])
-generator = make_generator(im_size, latent_size, image_shape[-1])
+generator = make_generator(im_size, LATENT_SIZE, image_shape[-1])
 
-# first model, AdModel: discriminator frozen, training generator and mapping network      
-#D does not update
+# Generation model: freeze discriminator, train generator
 discriminator.trainable = False
 for layer in discriminator.layers:
     layer.trainable = False
 
-#G does update
 generator.trainable = True
 for layer in generator.layers:
     layer.trainable = True
 
-#This model is simple sequential one with inputs and outputs
-gi = Input(shape = [latent_size])
+# generator inputs
+gi = Input(shape = [LATENT_SIZE])
 gi2 = Input(shape = [im_size, im_size, 1])
 gi3 = Input(shape = [1])
-
+# score the generator
 gf = generator([gi, gi2, gi3])
 df = discriminator(gf)
-
+# thats the generator scoring!
 AM = Model(inputs = [gi, gi2, gi3], outputs = df)
+AM.compile(optimizer = Adam(LEARNING_RATE, beta_1 = 0, beta_2 = 0.99), loss = wasserstein_loss)
 
-AM.compile(optimizer = Adam(lr, beta_1 = 0, beta_2 = 0.99), loss = wasserstein_loss)
-
-# Model 3: DisModel, just training the discriminator
+# Discrimination model: just training discriminator to score images
 discriminator.trainable = True
 for layer in discriminator.layers:
     layer.trainable = True
@@ -102,14 +104,14 @@ ri = Input(shape = [im_size, im_size, image_shape[-1]])
 dr = discriminator(ri)
 
 # pass in a fake image (by feeding into generator first)
-gi = Input(shape = [latent_size])
+gi = Input(shape = [LATENT_SIZE])
 gi2 = Input(shape = [im_size, im_size, 1])
 gi3 = Input(shape = [1])
 gf = generator([gi, gi2, gi3])
 df = discriminator(gf)
 
 class RandomWeightedAverage(_Merge):
-    """Provides a (random) weighted average between real and generated image samples"""
+    """Provides a (random) weighted average between real and generated image samples, for gradient penalty."""
     def _merge_function(self, inputs):
         alpha = K.random_uniform((BATCH_SIZE, 1, 1, 1))
         return (alpha * inputs[0]) + ((1 - alpha) * inputs[1])
@@ -123,12 +125,10 @@ DM = Model(inputs=[ri, gi, gi2, gi3], outputs=[dr, df, validity_interpolated])
 # special GP Loss
 partial_gp_loss = partial(gradient_penalty_loss, averaged_samples = ri, gradient_penalty_weight = 10)
 
-# we have mse, mse, then gp loss
-DM.compile(optimizer=Adam(lr, beta_1 = 0, beta_2 = 0.99), loss=[wasserstein_loss, wasserstein_loss, partial_gp_loss])
+DM.compile(optimizer=Adam(LEARNING_RATE, beta_1 = 0, beta_2 = 0.99), loss=[wasserstein_loss, wasserstein_loss, partial_gp_loss])
 
-# okay, finally we have all the models we are using defined.
+# okay, finally we have all the models we are using!
 # lets load our data
-# Load the dataset
 prepare_function = lambda x: prepare_images('data', x, (image_shape[0], image_shape[1]))
 if mode == 'anime':
     prepare_function = lambda x: prepare_anime_images('data', x, (image_shape[0], image_shape[1]))
@@ -139,11 +139,10 @@ ones = np.ones((BATCH_SIZE, 1), dtype=np.float32)
 nones = -ones
 zeroes = np.zeros((BATCH_SIZE, 1), dtype=np.float32) # Dummy gt for gradient penalty
 
-enoise = np.random.normal(0.0, 1.0, size = [8, latent_size])
+enoise = np.random.normal(0.0, 1.0, size = [8, LATENT_SIZE])
 enoiseImage = np.random.uniform(0.0, 1.0, size = [8, im_size, im_size, 1])
 
-# train!    
-# we alternate between mixed and regular models
+# train!
 for step in range(MAX_ITERATIONS+1):
     try:
         imgs = next(datagen)[0]
@@ -154,14 +153,14 @@ for step in range(MAX_ITERATIONS+1):
         imgs = next(datagen)[0]
     imgs = (imgs.astype(np.float32) - 0.5) * 2.0
     # train discriminator
-    train_noise = np.random.normal(0.0, 1.0, size = [BATCH_SIZE, latent_size])
+    train_noise = np.random.normal(0.0, 1.0, size = [BATCH_SIZE, LATENT_SIZE])
     train_noise_image = np.random.uniform(0.0, 1.0, size = [BATCH_SIZE, im_size, im_size, 1])
     d_loss = DM.train_on_batch(
         [imgs, train_noise, train_noise_image, ones],
         [ones, nones, ones]
     )
     # train generator
-    train_noise = np.random.normal(0.0, 1.0, size = [BATCH_SIZE, latent_size])
+    train_noise = np.random.normal(0.0, 1.0, size = [BATCH_SIZE, LATENT_SIZE])
     train_noise_image = np.random.uniform(0.0, 1.0, size = [BATCH_SIZE, im_size, im_size, 1])
     g_loss = AM.train_on_batch([train_noise, train_noise_image, ones], ones)
 
@@ -170,7 +169,7 @@ for step in range(MAX_ITERATIONS+1):
         print(f"D_loss: {str(d_loss)}")
         print("G_loss: " + str(g_loss))
 
-        sample_noise = np.clip(np.random.normal(0.0, 1.0, size = [25, latent_size]), -1.8, 1.8)
+        sample_noise = np.clip(np.random.normal(0.0, 1.0, size = [25, LATENT_SIZE]), -1.8, 1.8)
         sample_noise_image = np.random.uniform(0.0, 1.0, size = [25, im_size, im_size, 1])
         
         gen_imgs = generator.predict([sample_noise, sample_noise_image, np.ones([25, 1])])

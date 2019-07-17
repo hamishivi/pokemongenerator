@@ -1,5 +1,5 @@
 '''
-From https://github.com/manicman1999/StyleGAN-Keras/blob/master/AdaIN.py
+From https://github.com/manicman1999/StyleGAN-Keras/blob/master/AdaIN.py, without any alteration.
 '''
 from keras.layers import Layer
 from keras import backend as K
