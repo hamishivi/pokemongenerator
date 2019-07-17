@@ -41,7 +41,6 @@ def make_discriminator(im_size, num_channels):
     x = Dense(128)(x)
     x = LeakyReLU(0.01)(x)
     
-    # x = Dropout(0.6)(x)
     x = Dense(1)(x)
     
     return Model(inputs = inp, outputs = x)

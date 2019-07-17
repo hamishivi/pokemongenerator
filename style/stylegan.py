@@ -14,18 +14,17 @@ from keras.layers.merge import _Merge
 import keras.backend as K
 
 from AdaIN import AdaInstanceNormalization
-from style_mapper import make_mapper
 from style_gen import make_generator
 from style_disc import make_discriminator
-from data_prep import prepare_images, prepare_mnist, gen_mnist, prepare_cifar10, prepare_anime_images
+from data_prep import prepare_images, prepare_anime_images
 
 # constants
 MAX_ITERATIONS = 100000
 BATCH_SIZE = 32
 SAMPLE_INTERVAL = 100
 LOG_FILE = 'logs/dummy_logs.txt'
-CRITIC_WEIGHTS_SAVE_LOC = 'weights/style_critic_poke.h5'
-GENERATOR_WEIGHTS_SAVE_LOC = 'weights/style_gen_poke.h5'
+CRITIC_WEIGHTS_SAVE_LOC = 'weights/style_critic_dummy.h5'
+GENERATOR_WEIGHTS_SAVE_LOC = 'weights/style_gen_dummy.h5'
 # the below should be a folder
 IMAGES_SAVE_DIR = "results"
 
@@ -33,13 +32,7 @@ IMAGES_SAVE_DIR = "results"
 mode = 'pokemon'
 image_shape = (256, 256, 3)
 if len(sys.argv) > 1:
-    if sys.argv[1] == 'mnist':
-        mode = 'mnist'
-        image_shape = (64, 64, 1)
-    elif sys.argv[1] == 'cifar':
-        mode = 'cifar'
-        image_shape = (32, 32, 3)
-    elif sys.argv[1] == 'anime':
+    if sys.argv[1] == 'anime':
         mode = 'anime'
         image_shape = (128, 128, 3)
 
@@ -137,12 +130,7 @@ DM.compile(optimizer=Adam(lr, beta_1 = 0, beta_2 = 0.99), loss=[wasserstein_loss
 # lets load our data
 # Load the dataset
 prepare_function = lambda x: prepare_images('data', x, (image_shape[0], image_shape[1]))
-if mode == 'mnist':
-    mnist_train = prepare_mnist(BATCH_SIZE, image_shape)
-    prepare_function = lambda x: gen_mnist(x, mnist_train)
-elif mode == 'cifar':
-    prepare_function = lambda x: prepare_cifar10(x, image_shape)
-elif mode == 'anime':
+if mode == 'anime':
     prepare_function = lambda x: prepare_anime_images('data', x, (image_shape[0], image_shape[1]))
 
 datagen = prepare_function(BATCH_SIZE)
@@ -193,10 +181,7 @@ for step in range(MAX_ITERATIONS+1):
         cnt = 0
         for i in axs:
             for p in i:
-                if mode == 'mnist':
-                    p.imshow(gen_imgs[cnt, :, :, 0], cmap='gray')
-                else:
-                    p.imshow(gen_imgs[cnt, :, :, :])
+                p.imshow(gen_imgs[cnt, :, :, :])
                 p.axis("off")
                 cnt += 1
         fig.savefig(os.path.join(IMAGES_SAVE_DIR, f"{mode}_{str(step)}.png"))
